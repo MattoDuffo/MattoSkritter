@@ -208,7 +208,7 @@ simplified  traditional  numbered pinyin   definition
 | Users | Just you | No accounts, server or sync; local data with file backup |
 | Skritter lists | Import them | Skritter list import is part of Phase 3 |
 
-**Skritter import:** done with 5 sample exports (see section 4b). They contain no review history, so progress can't be carried over exactly.
+**Skritter import:** the format is now known from 5 sample exports (see section 4b); the importer itself is not built yet. They contain no review history, so progress can't be carried over exactly.
 
 ## 6. Immediate next step
 Start **Phase 0**: scaffold the web app and build the Mandarin content pipeline (CC-CEDICT, Make Me a Hanzi, HSK lists). Then build a vertical slice on the iPhone: write one HSK 1 word with your finger, have it checked and graded, and see it scheduled.
