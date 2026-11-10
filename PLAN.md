@@ -95,6 +95,18 @@ packages/content    build scripts that turn CC-CEDICT, MakeMeAHanzi, HSK etc. in
 server/ (later)     sync API (e.g. Supabase or a small Node + Postgres service)
 ```
 
+**Trade-offs of a web app vs. native apps**
+| What we give up | Impact | Mitigation |
+|---|---|---|
+| Native pen latency on iPad (PencilKit stroke prediction) | A few ms of extra ink lag. Noticeable to purists, fine for practice. | Pointer Events with `getCoalescedEvents()`/`getPredictedEvents()`, a lightweight canvas renderer, and `touch-action: none` |
+| Guaranteed local storage (Safari can evict data of sites not opened recently) | Risk of losing offline progress | Install to the home screen, call `navigator.storage.persist()`, add a JSON export/backup button, and sync later |
+| Reliable reminder notifications | Web push works on iOS only for home-screen-installed apps (iOS 16.4+) | Use web push where available, plus an optional email reminder later |
+| Background sync, widgets, Siri/shortcuts, haptics on iOS | No "due today" widget and no vibration on wrong strokes | Not core to studying, so skip it |
+| High-quality offline audio | Web Speech voices differ by device, and autoplay requires a user tap first | Bundle recorded syllable audio later |
+| App Store presence | Not discoverable in stores (irrelevant for personal use) | If ever needed, wrap the same code with Capacitor |
+
+What we gain: one codebase for iPad, Android, phone and desktop; instant updates with no review process; no developer-account fees; easy sharing via a URL.
+
 **Key design decisions**
 - **Data model:** `Word` (dictionary entry), `Character` (stroke data), `List` → `Section` → `ListItem(wordId)`, `Item(wordId, part, srsState)`, `Review(itemId, grade, timestamp, duration, mistakes)`. Keeping the review log means the scheduler and stats can be recomputed at any time.
 - **Local-first:** all study happens against IndexedDB. Sync, added later, replays review logs, which avoids merge conflicts on SRS state.
