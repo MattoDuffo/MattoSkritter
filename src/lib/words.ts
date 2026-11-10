@@ -38,8 +38,8 @@ export const itemId = (wordId: string, part: Part) => `${wordId}|${part}`;
 interface IntroduceOpts {
   now: number;
   charItems: boolean;
-  /** imported as already studied: schedule as known, due in this many days */
-  knownDueInDays?: number;
+  /** imported as already studied: schedule as known, due in this many days (optionally per part) */
+  knownDueInDays?: number | ((part: Part) => number);
 }
 
 /**
@@ -50,10 +50,11 @@ export async function introduceWord(wordId: string, opts: IntroduceOpts): Promis
   const word = await db.words.get(wordId);
   if (!word) return [];
   const created: string[] = [];
-  const mkCard = () =>
-    opts.knownDueInDays !== undefined
-      ? knownCard(opts.now, opts.knownDueInDays, Math.max(10, opts.knownDueInDays))
-      : newCard(opts.now);
+  const mkCard = (part: Part) => {
+    if (opts.knownDueInDays === undefined) return newCard(opts.now);
+    const d = typeof opts.knownDueInDays === 'function' ? opts.knownDueInDays(part) : opts.knownDueInDays;
+    return knownCard(opts.now, d, Math.max(10, d));
+  };
 
   const parts = await availableParts(word);
   for (const part of parts) {
@@ -63,7 +64,7 @@ export async function introduceWord(wordId: string, opts: IntroduceOpts): Promis
       if (existing.charOf) await db.items.update(id, { charOf: undefined });
       continue;
     }
-    const card = mkCard();
+    const card = mkCard(part);
     await db.items.add({ id, wordId, part, banned: 0, card, dueAt: card.due, createdAt: opts.now });
     created.push(id);
   }
@@ -80,7 +81,7 @@ export async function introduceWord(wordId: string, opts: IntroduceOpts): Promis
       if (await db.items.get(id)) continue;
       if (!(await strokeCheck(c))) continue;
       await ensureCharWord(c, syl.length === chars.length ? `${syl[i].text}${syl[i].tone}` : undefined, opts.now);
-      const card = mkCard();
+      const card = mkCard('write');
       await db.items.add({ id, wordId: c, part: 'write', banned: 0, charOf: wordId, card, dueAt: card.due, createdAt: opts.now });
       created.push(id);
     }

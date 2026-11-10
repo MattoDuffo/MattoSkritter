@@ -307,8 +307,16 @@ All **809** characters and radicals in your Skritter exports (including 讠 钅 
 | Main device | iPhone | Finger writing on a small screen drives the canvas design; test on the phone from the start |
 | Users | Just you | No accounts, server or sync; local data with file backup |
 | Skritter lists | Import them | Skritter list import is part of Phase 3 |
+| Hosting | GitHub Pages, public repo | Deployed by `.github/workflows/deploy.yml` on every push to `main` |
+| Characters inside words | On (setting) | 健身房 also adds writing items for 健, 身, 房 |
+| Auto-advance | On after ~1 s for “Got it” (setting) | Other grades wait for a tap |
 
 **Skritter import:** the format is now known from 5 sample exports (see section 4b); the importer itself is not built yet. They contain no review history, so progress can't be carried over exactly.
 
-## 6. Immediate next step
+## 5b. Status — first version built (2026-11-10)
+The first pass covers phases 0–4, the must-haves (M1–M4) and most of phase 5: writing, tone, definition and reading cards; FSRS scheduling with the stubbornness slider; Skritter import; lists, dictionary, add/edit words; stats; dark mode; offline PWA; backup/restore. It's tested with unit tests and an iPhone-emulated end-to-end test (`e2e/smoke.mjs`).
+
+Not built yet: raw squigs mode, recorded audio (it uses the iPhone's text-to-speech), CSV/Anki/Pleco import, a stats CSV export. Grading and stroke tolerances still need tuning on a real iPhone.
+
+## 6. Immediate next step (original)
 Start **Phase 0**: scaffold the web app and build the Mandarin content pipeline (CC-CEDICT, Make Me a Hanzi, HSK lists). Then build a vertical slice on the iPhone: write one HSK 1 word with your finger, have it checked and graded, and see it scheduled.

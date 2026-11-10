@@ -1,4 +1,5 @@
-import { db, type Word } from './db';
+import { db, type Item, type Part, type Word } from './db';
+import { knownCard } from './srs';
 import { dictLoaded, lookup } from './dict';
 import { hanChars } from './pinyin';
 import { addToList, introduceWord } from './words';
@@ -47,11 +48,12 @@ export interface ImportReport {
   newWords: number;
   notInDictionary: string[];
   spreadDays: number;
+  writingDays: number;
 }
 
 export async function importSkritter(
   files: { name: string; text: string }[],
-  opts: { now: number; charItems: boolean; maxReviewsPerDay: number; partsPerWord?: number; onProgress?: (msg: string) => void },
+  opts: { now: number; charItems: boolean; maxReviewsPerDay: number; onProgress?: (msg: string) => void },
 ): Promise<ImportReport> {
   const parsed = files.map((f) => ({ name: f.name, rows: parseExport(f.text) }));
   const studiedFiles = parsed.filter((f) => isStudiedExport(f.name, f.rows));
@@ -90,7 +92,7 @@ export async function importSkritter(
   await db.words.bulkPut(toPut);
 
   // Lists
-  const report: ImportReport = { lists: [], words: wordData.size, studied: 0, newWords: 0, notInDictionary: [], spreadDays: 0 };
+  const report: ImportReport = { lists: [], words: wordData.size, studied: 0, newWords: 0, notInDictionary: [], spreadDays: 0, writingDays: 0 };
   const inLists = new Set<string>();
   const allLists = await db.lists.toArray();
   let order = allLists.length;
@@ -118,20 +120,32 @@ export async function importSkritter(
     report.lists.push({ name: 'Skritter – other', words: others.length });
   }
 
-  // Studied words: known but due soon, spread so no day exceeds ~90% of the review cap.
+  // Studied words: known but due soon. Reviews are spread so no day exceeds ~90% of the review cap,
+  // with writing first (the main skill), then tone, definition and reading.
   const studied = [...studiedRows.keys()];
-  const partsPerWord = opts.partsPerWord ?? 4;
-  const estimate = studied.reduce((n, s) => n + partsPerWord + (opts.charItems ? Math.max(0, hanChars(s).length - 1) * 0.3 : 0), 0);
-  const spreadDays = Math.max(1, Math.ceil(estimate / Math.max(10, opts.maxReviewsPerDay * 0.9)));
-  report.spreadDays = spreadDays;
+  const created: string[] = [];
   for (let i = 0; i < studied.length; i++) {
     if (i % 25 === 0) opts.onProgress?.(`Scheduling studied words… ${i}/${studied.length}`);
     const w = await db.words.get(studied[i]);
     if (w?.introducedAt) continue;
-    const dueInDays = (i / studied.length) * spreadDays;
-    await introduceWord(studied[i], { now: opts.now, charItems: opts.charItems, knownDueInDays: dueInDays });
+    created.push(...(await introduceWord(studied[i], { now: opts.now, charItems: opts.charItems, knownDueInDays: 0 })));
     report.studied++;
   }
+  const perDay = Math.max(10, opts.maxReviewsPerDay * 0.9);
+  const partOrder: Part[] = ['write', 'tone', 'defn', 'read'];
+  const items = ((await db.items.bulkGet(created)).filter(Boolean) as Item[]).sort(
+    (a, b) => partOrder.indexOf(a.part) - partOrder.indexOf(b.part),
+  );
+  const writeCount = items.filter((it) => it.part === 'write').length;
+  items.forEach((it, k) => {
+    const days = k / perDay;
+    const card = knownCard(opts.now, days, Math.max(10, days));
+    it.card = card;
+    it.dueAt = card.due;
+  });
+  await db.items.bulkPut(items);
+  report.spreadDays = Math.max(1, Math.ceil(items.length / perDay));
+  report.writingDays = Math.max(1, Math.ceil(writeCount / perDay));
   report.newWords = [...inLists].filter((s) => !studiedRows.has(s)).length;
 
   if (dictLoaded()) {

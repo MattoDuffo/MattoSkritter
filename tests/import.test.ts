@@ -44,9 +44,10 @@ describe('import + session', () => {
   });
   it('spreads reviews over the first days', async () => {
     const items = await db.items.toArray();
-    const dueDay1 = items.filter((i) => i.dueAt <= now + 86_400_000).length;
-    expect(dueDay1).toBeLessThanOrEqual(110);
-    expect(dueDay1).toBeGreaterThan(20);
+    const day1 = items.filter((i) => i.dueAt <= now + 86_400_000);
+    expect(day1.length).toBeLessThanOrEqual(110);
+    expect(day1.length).toBeGreaterThan(20);
+    expect(day1.every((i) => i.part === 'write')).toBe(true);
   });
   it('builds a session with reviews and new words', async () => {
     const s = { ...DEFAULT_SETTINGS, stubbornness: 0 };
