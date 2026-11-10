@@ -1,0 +1,598 @@
+水	水	shui3	water (Kangxi radical 85)
+咖啡	咖啡	ka1fei1	coffee
+和	和	he2, huo4, huo2, he4, han4	and; with; harmony; peace;; mix together;; soft; warm;; join in the singing
+茶	茶	cha2	tea
+米	米	mi3	(husked) rice; meter (Kangxi radical 119)
+饭	飯	fan4	food; meal; cooked rice
+米饭	米飯	mi3fan4	(cooked) rice
+热	熱	re4	heat; hot; heat up
+汤	湯	tang1	soup
+粥	粥	zhou1	porridge; congee; gruel
+这	這	zhe4, zhei4	this; these
+腐	腐	fu3	decay; rotten; spoil
+豆	豆	dou4	bean (Kangxi radical 151)
+日	日	ri4	sun; day; date; time (Kangxi radical 72)
+是	是	shi4	to be (is, am, are)
+国	國	guo2	country; state; nation
+中	中	zhong1, zhong4	in the middle; medium; among; China; to hit (the mark); be hit; receive
+美	美	mei3	beautiful; America
+本	本	ben3	(mw for books); root or stem of plants; origin; this
+日本	日本	ri4ben3	Japan
+我	我	wo3	I; me
+韩	韓	han2	Korea
+你	你	ni3	you
+呢	呢	ne5, ni2	(modal particle ending a question); how about...?; what about...? 
+英	英	ying1	flower; hero; England
+文	文	wen2	language; literature; culture; writing (Kangxi radical 67)
+医	醫	yi1	medical; medicine; doctor; to cure
+生	生	sheng1	to be born; to give birth; to start (a fire); to grow; to be afflicted with; raw; uncooked; life; student (Kangxi radical 100)
+老	老	lao3	old; aged; tough; often; always (Kangxi radical 125)
+师	師	shi1	teacher; master; a (military) division
+律师	律師	lv4shi1	lawyer
+律	律	lv4	law; statute; principle; regulation
+对	對	dui4	correct; a pair; to face; be opposite; to; towards
+不	不	bu4	no; not
+说	說	shuo1, shui4	speak; to say; to talk
+课	課	ke4	class; subject; lesson; course
+你	你	ni3	you
+大	大	da4, dai4	big; large; great (Kangxi radical 37)
+他	他	ta1	he; him; (gender-neutral term for both sexes)
+音乐	音樂	yin1yue4	music
+爸	爸	ba4	father; dad; pa
+儿	兒	er2	child; son (Kangxi radical 10); ; (retroflex final)
+子	子	zi3, zi5	son; child; 1st Earthly Branch (Kangxi radical 39); seed; (noun suffix)
+妈	媽	ma1	ma; mom
+公	公	gong1	public; fair; honorable (designation); international; male (animal)
+老公	老公	lao3gong1	(informal) husband
+婆	婆	po2	grandmother; mother-in-law; matron
+老婆	老婆	lao3po2	wife (informal)
+加	加	jia1	add; increase; plus
+拿	拿	na2	carry in your hand; take; get
+去	去	qu4	go; go to (a place); send; cause to go; remove; get rid of; depart from
+店	店	dian4	shop; store; inn
+常	常	chang2	always; often; frequently
+书	書	shu1	book; letter
+超	超	chao1	super-; exceed; overtake
+菜	菜	cai4	dish (type of food); cuisine; vegetables; (coll) one's type
+零	零	ling2	zero
+谢	謝	xie4	thank; wither (plants); surname Xie
+杯	杯	bei1	cup; (mw for drinks)
+要	要	yao4, yao1	to want; to need; will/shall; important; demand; request
+奶	奶	nai3	milk; breast
+买	買	mai3	to buy
+两	兩	liang3	two (cardinal number); both; (unit of weight equal to 50 grams)
+牛	牛	niu2	ox; cow; bull (Kangxi radical 93); exceptional (slang)
+冰	冰	bing1	ice
+手	手	shou3	hand (Kangxi radical 64)
+钱	錢	qian2	money; coin; Chinese Surname
+机	機	ji1	machine; aircraft; pivot; opportunity
+里	裡	li3	inside; internal
+洗	洗	xi3	to wash; bathe
+间	間	jian1, jian4	(mw for rooms); space; time; among; a gap; to separate
+火	火	huo3	fire (Kangxi radical 86); urgent; hot (popular); fiery
+在	在	zai4	be at, on, in (a place or time); exist; rest with; (indicating an action in progress)
+包	包	bao1	to cover; to wrap; to hold; include; bag; (mw for containers, packages, etc.)
+没	沒	mei2, mo4	not have; there is not; (negative verb prefix); to drown; submerge
+绿	綠	lv4	green
+客	客	ke4	guest; customer; visitor
+呀	呀	ya5, ya1	ah; oh; (used for 啊 after words ending with a, e, i, o, or u)
+行	行	xing2, hang2	to walk; be current; do; will do; okay; a row; series; place; a firm; (Kangxi radical 144)
+李	李	li3	plum; surname Li
+行李	行李	xing2li5	luggage; baggage
+票	票	piao4	ticket; bank note; a vote
+台	檯	tai2	desk; platform
+回	回	hui2	to return; go back; turn around; to reply; occasion (mw for matters or actions); the Hui nationality
+明	明	ming2	clear; bright; light; brilliant, understand
+昨	昨	zuo2	yesterday; the past
+天	天	tian1	day; sky; heaven; weather
+每	每	mei3	each; every
+没	沒	mei2, mo4	not have; there is not; (negative verb prefix); to drown; submerge
+好	好	hao3, hao4	good; well; nice; very; quite; be fond of
+元	元	yuan2	Chinese monetary unit; dollar; first; principal
+块	塊	kuai4	lump; chunk (mw for pieces of soap, cake, cloth, units of currency, etc)
+盐	鹽	yan2	salt; table salt
+糖	糖	tang2	sugar; candy; sweets
+筷子	筷子	kuai4zi5	chopsticks
+田	田	tian2	field (Kangxi radical 102); surname
+潇	瀟	xiao1	deep, clear water
+坤	坤	kun1	female; feminine; one of the Eight Trigrams, representing earth
+水	水	shui3	water (Kangxi radical 85)
+咖	咖	ka1, ga1	(phonetic "ka", "ga"); coffee
+啡	啡	fei1	coffee
+和	和	he2, huo4, huo2, he4, han4	and; with; harmony; peace;; mix together;; soft; warm;; join in the singing
+茶	茶	cha2	tea
+米	米	mi3	(husked) rice; meter (Kangxi radical 119)
+饭	飯	fan4	food; meal; cooked rice
+汤	湯	tang1	soup
+热	熱	re4	heat; hot; heat up
+这	這	zhe4, zhei4	this; these
+是	是	shi4	to be (is, am, are)
+粥	粥	zhou1	porridge; congee; gruel
+豆	豆	dou4	bean (Kangxi radical 151)
+腐	腐	fu3	decay; rotten; spoil
+美	美	mei3	beautiful; America
+国	國	guo2	country; state; nation
+中	中	zhong1, zhong4	in the middle; medium; among; China; to hit (the mark); be hit; receive
+日	日	ri4	sun; day; date; time (Kangxi radical 72)
+本	本	ben3	(mw for books); root or stem of plants; origin; this
+我	我	wo3	I; me
+你	你	ni3	you
+呢	呢	ne5, ni2	(modal particle ending a question); how about...?; what about...? 
+韩	韓	han2	Korea
+英	英	ying1	flower; hero; England
+文	文	wen2	language; literature; culture; writing (Kangxi radical 67)
+医	醫	yi1	medical; medicine; doctor; to cure
+生	生	sheng1	to be born; to give birth; to start (a fire); to grow; to be afflicted with; raw; uncooked; life; student (Kangxi radical 100)
+老	老	lao3	old; aged; tough; often; always (Kangxi radical 125)
+师	師	shi1	teacher; master; a (military) division
+对	對	dui4	correct; a pair; to face; be opposite; to; towards
+不	不	bu4	no; not
+律	律	lv4	law; statute; principle; regulation
+说	説	shuo1, shui4	speak; to say; to talk
+学	學	xue2	to study; learn; science; -ology
+喜	喜	xi3	fond of; like; enjoy; happiness
+欢	歡	huan1	happy; vigorous
+课	課	ke4	class; subject; lesson; course
+大	大	da4, dai4	big; large; great (Kangxi radical 37)
+数	數	shu4, shu3, shuo4	number; to count; to rank; frequently; repeatedly
+他	他	ta1	he; him; (gender-neutral term for both sexes)
+音	音	yin1	sound; news; syllable (Kangxi radical 180)
+乐	樂	le4, yue4	happy; laugh; music
+她	她	ta1	she
+爸	爸	ba4	father; dad; pa
+儿	兒	er2	child; son (Kangxi radical 10); ; (retroflex final)
+子	子	zi3, zi5	son; child; 1st Earthly Branch (Kangxi radical 39); seed; (noun suffix)
+妈	媽	ma1	ma; mom
+公	公	gong1	public; fair; honorable (designation); international; male (animal)
+加	加	jia1	add; increase; plus
+拿	拿	na2	carry in your hand; take; get
+婆	婆	po2	grandmother; mother-in-law; matron
+也	也	ye3	also; too, as well as
+女	女	nv3	woman; female (Kangxi radical 38)
+去	去	qu4	go; go to (a place); send; cause to go; remove; get rid of; depart from
+常	常	chang2	always; often; frequently
+书	書	shu1	book; letter
+店	店	dian4	shop; store; inn
+超	超	chao1	super-; exceed; overtake
+市	市	shi4	market; city
+馆	館	guan3	house; building; establishment
+菜	菜	cai4	dish (type of food); cuisine; vegetables; (coll) one's type
+吃	吃	chi1	to eat
+买	買	mai3	to buy
+零	零	ling2	zero
+食	食	shi2	eat; food (Kangxi radical 184)
+看	看	kan4, kan1	see; look at; to watch; regard; watch over; look after
+韩文	韓文	Han2wen2	Korean written language; Hangul
+要	要	yao4, yao1	to want; to need; will/shall; important; demand; request
+谢	謝	xie4	thank; wither (plants); surname Xie
+杯	杯	bei1	cup; (mw for drinks)
+奶	奶	nai3	milk; breast
+两	兩	liang3	two (cardinal number); both; (unit of weight equal to 50 grams)
+牛	牛	niu2	ox; cow; bull (Kangxi radical 93); exceptional (slang)
+冰	冰	bing1	ice
+绿	綠	lv4	green
+客	客	ke4	guest; customer; visitor
+气	氣	qi4	air; anger; steam; gas; spirit
+客气	客氣	ke4qi5	polite; courteous; formal; modest
+奶茶	奶茶	nai3cha2	milk tea
+绿茶	綠茶	lv4cha2	green tea
+手	手	shou3	hand (Kangxi radical 64)
+机	機	ji1	machine; aircraft; pivot; opportunity
+里	里	li3	Chinese mile (~.5 km); neighborhood (Kangxi radical 166)
+在	在	zai4	be at, on, in (a place or time); exist; rest with; (indicating an action in progress)
+钱	錢	qian2	money; coin; Chinese Surname
+包	包	bao1	to cover; to wrap; to hold; include; bag; (mw for containers, packages, etc.)
+洗	洗	xi3	to wash; bathe
+间	間	jian1, jian4	(mw for rooms); space; time; among; a gap; to separate
+哪	哪	na3, nei3, na5	which; how
+火	火	huo3	fire (Kangxi radical 86); urgent; hot (popular); fiery
+车	車	che1, ju1	car; vehicle; machine (Kangxi radical 159); (written) chariot
+站	站	zhan4	stand; a station; be on one's feet; service center
+哎呀	哎呀	ai1ya1	oh!; ah!; (interjection of surprise or shock)
+呀	呀	ya5, ya1	ah; oh; (used for 啊 after words ending with a, e, i, o, or u)
+行	行	xing2, hang2	to walk; be current; do; will do; okay; a row; series; place; a firm; (Kangxi radical 144)
+李	李	li3	plum; surname Li
+行李	行李	xing2li5	luggage; baggage
+票	票	piao4	ticket; bank note; a vote
+台	臺	tai2	platform; stage; terrace; Taiwan (abbr.)
+同	同	tong2	same; similar; together; with
+同学	同學	tong2xue2	fellow student; schoolmate
+新	新	xin1	new
+有	有	you3	have; there is
+好	好	hao3, hao4	good; well; nice; very; quite; be fond of
+四	四	si4	four
+今	今	jin1	now; at present; today; modern
+天	天	tian1	day; sky; heaven; weather
+历	歷	li4	history; take place; past
+史	史	shi3	history
+历史	歷史	li4shi3	history
+们	們	men5, men2	(particle forming a plural pronoun)
+真	真	zhen1	real; true; genuine
+的	的	de5, di4, di2	(possessive, modifying, or descriptive particle)
+吗	嗎	ma5	(particle for yes/no questions)
+运	運	yun4	to move; to transport; luck
+动	動	dong4	to move; to use; to act 
+运动	運動	yun4dong4	(physical) to exercise; movements; sports; campaign
+篮	籃	lan2	basket; (sports) basketball goal; basket
+篮球	籃球	lan2qiu2	basketball
+排球	排球	pai2qiu2	volleyball
+球	球	qiu2	ball; globe
+打	打	da3, da2	to hit; to beat; to play; to type; dozen
+非常	非常	fei1chang2	extremely; extraordinary; very
+网	網	wang3	net; network
+还	還	hai2, huan2	still; yet; in addition; even.; repay; to return
+还是	還是	hai2shi5	or (for questions only); still; yet; nevertheless; had better
+比	比	bi3	compare; (indicates comparison) (Kangxi radical 81); to gesticulate as one talks
+比较	比較	bi3jiao4	to compare; comparatively; relatively; contrast
+园	園	yuan2	garden
+公园	公園	gong1yuan2	public park
+健	健	jian4	healthy; robust; strength
+身	身	shen1	body; torso; person (Kangxi radical 158)
+房	房	fang2	house; building; room 
+健身	健身	jian4shen1	work out; body-building; fitness
+健身房	健身房	jian4shen1fang2	gym; exercise room
+跑步	跑步	pao3 bu4	to run; to jog
+公寓	公寓	gong1yu4	apartment building; apartment
+寓	寓	yu4	reside; residence
+只	只	zhi3	only; merely; just; but
+听	聽	ting1	listen; hear; heed
+厅	廳	ting1	(reception) hall; office; public room of a house
+小	小	xiao3	small; young (Kangxi radical 42)
+室	室	shi4	room
+卧室	臥室	wo4shi4	bedroom
+卧	臥	wo4	recline; crouch
+漂	漂	piao4, piao1, piao3	elegant; to float; to bleach
+亮	亮	liang4	bright; light; shiny
+漂亮	漂亮	piao4liang5	pretty; beautiful
+厨房	廚房	chu2fang2	kitchen
+厨	廚	chu2	kitchen
+沙发	沙發	sha1fa1	sofa
+舒服	舒服	shu1fu5	comfortable; feeling well
+舒	舒	shu1	stretch out; relax; leisurely
+服	服	fu2, fu4	clothing; serve; obey; convince; take (medicine); accustomed to; (mw for medicinal dose)
+电	電	dian4	electricity; electrical
+电视	電視	dian4shi4	television; TV
+视	視	shi4	look at; regard; inspect
+床	床	chuang2	bed; couch; mv for blankets, duvets or sheets
+旧	舊	jiu4	old; past; used
+乱	亂	luan4	Messy, disorder; confusion; arbitrarily
+桌	桌	zhuo1	table
+房子	房子	fang2zi5	house; building
+房间	房間	fang2jian1	room
+客厅	客廳	ke4ting1	living room; parlor
+冰箱	冰箱	bing1xiang1	refrigerator
+老家	老家	lao3jia1	native place; place of origin; hometown
+热闹	熱鬧	re4nao5	bustling; lively; busy
+特别	特別	te4bie2	special; especially; particular
+人们	人們	ren2men5	people
+有名	有名	you3ming2	famous; well-known
+寓	寓	yu4	reside; residence
+只	只	zhi3	only; merely; just; but
+厅	廳	ting1	(reception) hall; office; public room of a house
+客厅	客廳	ke4ting1	living room; parlor
+小	小	xiao3	small; young (Kangxi radical 42)
+室	室	shi4	room
+卧室	臥室	wo4shi4	bedroom
+漂	漂	piao4, piao1, piao3	elegant; to float; to bleach
+亮	亮	liang4	bright; light; shiny
+漂亮	漂亮	piao4liang5	pretty; beautiful
+厨	廚	chu2	kitchen
+厨房	廚房	chu2fang2	kitchen
+沙发	沙發	sha1fa1	sofa
+舒	舒	shu1	stretch out; relax; leisurely
+服	服	fu2, fu4	clothing; serve; obey; convince; take (medicine); accustomed to; (mw for medicinal dose)
+舒服	舒服	shu1fu5	comfortable; feeling well
+电	電	dian4	electricity; electrical
+视	視	shi4	look at; regard; inspect
+电视	電視	dian4shi4	television; TV
+床	床	chuang2	bed; couch; mv for blankets, duvets or sheets
+旧	舊	jiu4	old; past; used
+乱	亂	luan4	Messy, disorder; confusion; arbitrarily
+桌	桌	zhuo1	table
+夏	夏	xia4	summer
+春	春	chun1	spring (season); joyful
+北京	北京	Bei3jing1	Beijing
+玩	玩	wan2	to play; have a good time; visit; enjoy
+家	家	jia1	family; home; household; MW for businesses
+冷	冷	leng3	cold
+特	特	te4	special; unusual; extraordinary
+别	別	bie2, bie4	don't; depart; other; difference; distinguish
+特别	特別	te4bie2	special; especially; particular
+冬	冬	dong1	winter
+故	故	gu4	happening; reason; hence; former
+宫	宮	gong1	palace
+故宫	故宮	Gu4gong1	Forbidden City; the Imperial Palace
+长	長	chang2, zhang3	long; length; grow; chief (Kangxi radical 168)
+城	城	cheng2	city; town; city walls
+长城	長城	chang2cheng2	the Great Wall of China
+秋	秋	qiu1	autumn; fall; harvest time
+明	明	ming2	clear; bright; light; brilliant, understand
+人	人	ren2	person; man; people (Kangxi radical 9)
+门	門	men2	door; opening; gate; (mw for classes and languages) (Kangxi radical 169)
+人们	人們	ren2men5	people
+远	遠	yuan3	far; distant; remote
+贵	貴	gui4	expensive; noble; honorable; Guizhou province (abbreviation)
+物	物	wu4	thing; object; matter
+辣	辣	la4	hot (spicy)
+门票	門票	men2piao4	admissions ticket
+动物园	動物園	dong4wu4yuan2	zoo
+火锅	火鍋	huo3guo1	hotpot
+周	周	zhou1	a cycle; circle; complete; all around; (common surname)
+末	末	mo4	end; final; tip
+周末	週末	zhou1mo4	weekend
+公交车	公交車	gong1jiao1che1	public bus
+交	交	jiao1	submit; deliver; turn over; intersect; to pay (money); friendship
+地	地	di4, de5	earth; ground;; - ly (structural particle: used before a verb or adjective, linking it to preceding modifying adverbial adjunct)
+铁	鐵	tie3	iron
+地铁	地鐵	di4tie3	subway
+坐	坐	zuo4	to sit; to travel by; to take
+爱	愛	ai4	love; affection; be fond of
+情	情	qing2	feeling; emotion; passion; condition
+爱情	愛情	ai4qing2	(romantic) love
+影	影	ying3	shadow; reflection; image; picture; film 
+电影	電影	dian4ying3	movie; film
+爆	爆	bao4	crack; explode; burst; quick boil/fry
+花	花	hua1	flower; blossom; spend (money or time); cost; to smear 
+爆米花	爆米花	bao4mi3hua1	popcorn
+些	些	xie1	some; few; several; (mw for indefinite amount)
+蛋	蛋	dan4	egg
+糕	糕	gao1	cake
+果	果	guo3	fruit; result
+带	帶	dai4	to bring; to take along; to carry; look after; raise (children); band; belt; ribbon; zone
+饺子	餃子	jiao3zi5	dumpling
+汁	汁	zhi1	juice
+果汁	果汁	guo3zhi1	fruit juice
+做	做	zuo4	do; make; to produce; be; to cook; write
+晚	晚	wan3	evening; night; late
+喝	喝	he1, he4	to drink; shout loudly
+有空	有空	you3 kong4	have free time; have time (to do sth.)
+好的	好的	hao3de5	OK; okay; fine
+博物馆	博物館	bo2wu4guan3	museum
+电影	電影	dian4ying3	movie; film
+水果	水果	shui3guo3	fruit
+晚饭	晚飯	wan3fan4	dinner; supper
+饺子	餃子	jiao3zi5	dumpling
+土	土	tu3	earth; soil; land; local (Kangxi radical 32); unsophisticated
+先	先	xian1	first; early; before
+西	西	xi1	West (Kangxi radical 146)
+红	紅	hong2	red; symbol of success; bonus; popular
+柿	柿	shi4	persimmon, tomato
+几	幾	ji3, ji1	how many; several; a few; almost
+盘	盤	pan2	MW for a plate of food
+心	心	xin1	heart; mind (Kangxi radical 61)
+放	放	fang4	put; to place; to release; to free
+蔬	蔬	shu1	vegetables
+菜	菜	cai4	dish (type of food); cuisine; vegetables; (coll) one's type
+蔬菜	蔬菜	shu1cai4	vegetables; produce
+肉	肉	rou4	meat; flesh (Kangxi radical 130)
+爷	爺	ye2	grandpa; old gentleman
+多	多	duo1	many; much; a lot of; more than
+用	用	yong4	to use (Kangxi radical 101)
+现	現	xian4	to appear; to display; present; current; at the time
+淇淋	淇淋	qi2lin2	cream (loanword)
+碗	碗	wan3	a bowl; a cup
+土豆	土豆	tu3dou4	potato
+做饭	做飯	zuo4 fan4	to cook
+吃饭	吃飯	chi1fan4	to eat (a meal)
+饺子	餃子	jiao3zi5	dumpling
+小心	小心	xiao3xin1	be careful
+洗碗机	洗碗機	xi3wan3ji1	dishwasher
+十	十	shi2	ten (Kangxi radical 24)
+俱	俱	ju4	completely; entirely
+俱乐部	俱樂部	ju4le4bu4	club (group or organization)
+起	起	qi3	to rise; to raise; get up
+会	會	hui4, kuai4	can; to know how; be good at; be likely to; shall; meeting; conference; accounts
+足	足	zu2	foot; enough; ample; to be sufficient  (Kangxi radical 157)
+吉他	吉他	ji2ta1	guitar
+流行	流行	liu2xing2	to spread; prevalent; be popular
+流	流	liu2	to flow; to spread; to shed (tears); class, rate, or grade
+钢琴	鋼琴	gang1qin2	piano
+钢	鋼	gang1	steel
+琴	琴	qin2	(general name for certain musical instruments)
+练习	練習	lian4xi2	practice; exercise
+练	練	lian4	to practice; to train; to drill
+习	習	xi2	to practice; be used to; custom
+语言	語言	yu3yan2	language
+法语	法語	Fa3yu3	French (language)
+西班牙	西班牙	Xi1ban1ya2	Spain
+班	班	ban1	team; class; squad; shift; measure word for forms of transportation
+下班	下班	xia4 ban1	get off work; finish work
+牙	牙	ya2	tooth (Kangxi radical 92)
+面	面	mian4	face; aspect; side; noodle; flour (Kangxi radical 176)
+饼干	餅乾	bing3gan1	biscuit; cracker; cookie
+饼	餅	bing3	round flat cake; biscuit; pastry
+干	幹	gan4	to work; do; manage; tree trunk; capable; talented
+条	條	tiao2	strip; item; (mw for long thin objects)
+有趣	有趣	you3qu4	interesting; fascinating; amusing
+棒球	棒球	bang4qiu2	baseball
+足球	足球	zu2qiu2	football; soccer
+一起	一起	yi4qi3	together; in the same place
+面包	麵包	mian4bao1	bread
+巧克力	巧克力	qiao3ke4li4	chocolate (loan word)
+康	康	kang1	peaceful; healthy; happy
+健康	健康	jian4kang1	health; healthy
+想	想	xiang3	think; believe; suppose; wish; would like to; remember with longing; to miss
+可	可	ke3	can; may; able to; but; approve; very
+可以	可以	ke3yi3	can; may; possible; okay; effective at
+可乐	可樂	ke3le4	cola; amusing
+兔	兔	tu4	rabbit; hare; bunny
+狗	狗	gou3	dog
+出	出	chu1	go out; occur
+朋友	朋友	peng2you5	friend
+以	以	yi3	to use; according to; so as to; for; by
+商	商	shang1	commerce; consult; Shang dynasty; quotient
+场	場	chang3, chang2	courtyard; place; field; (mw for games, performances, etc.); threshing floor
+商场	商場	shang1chang3	market; bazaar; shopping mall
+哥	哥	ge1	elder brother
+脑	腦	nao3	brain
+借	借	jie4	lend; borrow
+姐	姐	jie3	older sister; sister;; a general term for young women;; elder female relative of the same generation in the clan
+戏	戲	xi4, hu1	to play; to joke; show; drama; opera
+休	休	xiu1	to rest; to stop
+息	息	xi1	breath; news; interest (on money); cease; to stop; to rest
+休息	休息	xiu1xi5	to rest; take a break
+扫	掃	sao3, sao4	to sweep; broom
+冰	冰	bing1	ice
+可爱	可愛	ke3'ai4	cute; lovely
+玩具	玩具	wan2ju4	plaything; toy
+出去玩	出去玩	chu1qu4wan2	Go out to play
+电脑	電腦	dian4nao3	computer
+游戏	遊戲	you2xi4	game; play; recreation
+可乐	可樂	ke3le4	cola; amusing
+地	地	di4, de5	earth; ground;; - ly (structural particle: used before a verb or adjective, linking it to preceding modifying adverbial adjunct)
+邻居	鄰居	lin2ju1	neighbor
+找	找	zhao3	look for; seek; give change
+地方	地方	di4fang5	place; space; room; part
+那	那	na4, nei4	that; in that case; then
+哪	哪	na3, nei3, na5	which; how
+等	等	deng3	wait; await; when; till; class; rank; grade; kind; sort; equal; and so on; etc.
+重	重	zhong4, chong2	heavy; intense; repeat; duplicate
+椅	椅	yi3	chair
+架	架	jia4	frame; rack; to support; quarrel; (mw for machines, planes, etc.)
+书架	書架	shu1jia4	bookshelf
+衣服	衣服	yi1fu5	clothes
+勺子	勺子	shao2zi5	spoon; scoop; ladle
+都	都	dou1, du1	all; both; capital; metropolis
+拖把	拖把	tuo1ba3	mop
+东西	東西	dong1xi5	thing; objects; stuff
+吸尘机	吸塵機	xi1chen2ji1	vacuum cleaner
+吸	吸	xi1	breathe; suck in; absorb; inhale
+尘	塵	chen2	dust; dirt
+脏	髒	zang1	filthy
+室友	室友	shi4you3	roommate
+地方	地方	di4fang5	place; space; room; part
+台灯	檯燈	tai2deng1	desk lamp; table lamp
+这些	這些	zhe4xie1	these
+那些	那些	na4xie1	those
+打扫	打掃	da3sao3	to clean; to sweep
+还	還	hai2, huan2	still; yet; in addition; even.; repay; to return
+妹	妹	mei4	younger sister
+星期	星期	xing1qi1	week
+期	期	qi1, qi2, ji1	period of time; phase; stage; entire, whole (year or month)
+星	星	xing1	star; heavenly body; satellite; small amount
+六	六	liu4	six
+早	早	zao3	early; (early) morning; good morning!
+报纸	報紙	bao4zhi3	newspaper
+帮	幫	bang1	to help; assist; group; gang
+帮助	幫助	bang1zhu4	help; assist; aid
+忙	忙	mang2	busy
+睡觉	睡覺	shui4jiao4	to sleep; to go to bed
+干净	乾淨	gan1jing4	clean; neat and tidy
+需要	需要	xu1yao4	need; require
+听	聽	ting1	listen; hear; heed
+提早	提早	ti2zao3	ahead of schedule; be earlier than expected
+上	上	shang4	above; up; on top; get on; go up; to attend
+喂	喂	wei2, wei4	hello (on the phone); hey
+什么	什麼	shen2me5	what; whatever; anything; something
+飞	飛	fei1	to fly (Kangxi radical 183)
+飞盘	飛盤	fei1pan2	frisbee
+孩	孩	hai2	child; infant
+卖	賣	mai4	to sell
+小提琴	小提琴	xiao3ti2qin2	violin; fiddle
+女孩	女孩	nv3hai2	girl; lass
+发烧	發燒	fa1shao1	have a fever
+烧	燒	shao1	to burn; to cook; to stew
+跟	跟	gen1	to follow; with; to; from; and; heel
+院	院	yuan4	courtyard; institution
+医院	醫院	yi1yuan4	hospital
+肚子	肚子	du4zi5	belly; abdomen; stomach
+昨	昨	zuo2	yesterday; the past
+头	頭	tou2	head; the first; leading; (mw for larger livestock)
+疼	疼	teng2	ache; sore; (it) hurts; love fondly
+药	藥	yao4	medicine; drug; cure; chemical
+请假	請假	qing3jia4	ask for time off
+下	下	xia4	under; below; to descend; to fall; down; next; the second (of two parts)
+开	開	kai1	to open; to start; to turn on; to operate (a vehicle)
+开心	開心	kai1xin1	feel happy; have fun; make fun of somebody
+来	來	lai2	come; arrive; ever since; next
+束	束	shu4	to tie; to bind; restrain; (mw for bunches, bundles, bouquets, etc.)
+应该	應該	ying1gai1	should; ought to; must
+煮	煮	zhu3	to boil; to cook
+体温	體溫	ti3wen1	body temperature
+少	少	shao3, shao4	few; little; lack; lose; young
+怎么了	怎麼了	zen3me5le5	What's going on? What's wrong?
+昨天	昨天	zuo2tian1	yesterday
+药店	藥店	yao4dian4	pharmacy
+开心	開心	kai1xin1	feel happy; have fun; make fun of somebody
+请	請	qing3	please; invite; to request; treat
+礼物	禮物	li3wu4	a gift; a present
+饮料	飲料	yin3liao4	beverage; drink
+准备	準備	zhun3bei4	prepare; get ready
+五	五	wu3	five
+种	種	zhong3, zhong4	type; breed; race; seed; to plant
+告诉	告訴	gao4su5	to tell; inform; let sb. know
+鱼	魚	yu2	fish (Kangxi radical 195)
+片	片	pian4, pian1	(mw for pieces of things); a slice; a flake (Kangxi radical 91); film; photo
+围巾	圍巾	wei2jin1	scarf; shawl; wrap
+项链	項鏈	xiang4lian4	necklace
+惊喜	驚喜	jing1xi3	pleasantly surprised; nice surprise
+气球	氣球	qi4qiu2	balloon
+领带	領帶	ling3dai4	necktie
+快乐	快樂	kuai4le4	happy
+条	條	tiao2	strip; item; (mw for long thin objects)
+学校	學校	xue2xiao4	school; campus
+校园	校園	xiao4yuan2	campus; schoolyard
+旁边	旁邊	pang2bian1	side; beside; next to
+图书馆	圖書館	tu2shu1guan3	library
+问	問	wen4	ask; inquire
+外	外	wai4	outer; outside; in addition; foreign
+参观	參觀	can1guan1	to visit (a place, such as a tourist spot); to tour; inspect
+操场	操場	cao1chang3	playground; sports field
+高	高	gao1	high; tall (Kangxi radical 189)
+后	後	hou4	back; behind; rear; after; later
+前	前	qian2	before; in front; forward
+食堂	食堂	shi2tang2	dining hall; cafeteria
+停	停	ting2	to stop; to halt; to park (a car)
+停车场	停車場	ting2che1chang3	parking lot; parking garage
+安静	安靜	an1jing4	quiet; peaceful; calm
+游泳池	游泳池	you2yong3chi2	swimming pool
+活动	活動	huo2dong4	activity; exercise; move about
+体育馆	體育館	ti3yu4guan3	gym; stadium; sports hall
+室友	室友	shi4you3	roommate
+里面	裡面	li3mian4	inside; interior
+教学楼	教學樓	jiao4xue2lou2	school building
+请问	請問	qing3 wen4	may I ask...
+请进	請進	qing3jin4	to come in; please enter
+西瓜	西瓜	xi1gua1	watermelon
+苹果	蘋果	ping2guo3	apple
+照片	照片	zhao4pian4	picture; photograph
+聪明	聰明	cong1ming5	intelligent; clever; bright; smart
+猫	貓	mao1	cat
+弟	弟	di4	younger brother
+鸡肉	雞肉	ji1rou4	chicken (meat)
+新鲜	新鮮	xin1xian1	fresh (experience, food, etc.); new; novel
+节目	節目	jie2mu4	program; item (on a program)
+书房	書房	shu1fang2	study (room)
+亮	亮	liang4	bright; light; shiny
+家人	家人	jia1ren2	family member; household; (one's) family
+没有	沒有	mei2you3	not have; there is not; haven't; hasn't
+玉米	玉米	yu4mi3	corn; maize
+唱歌	唱歌	chang4ge1	to sing (a song)
+歌手	歌手	ge1shou3	singer; vocalist
+很	很	hen3	very; rather; quite; is (used for adjectives)
+年	年	nian2	year
+工作	工作	gong1zuo4	work; a job
+旅行	旅行	lv3xing2	to travel; a journey
+回	回	hui2	to return; go back; turn around; to reply; occasion (mw for matters or actions); the Hui nationality
+岁	歲	sui4	years old; age
+动画片	動畫片	dong4hua4pian4	animated film
+上海	上海	Shang4hai3	Shanghai, China
+出生	出生	chu1sheng1	be born
+生活	生活	sheng1huo2	life; livelihood; to live
+长大	長大	zhang3da4	grow up
+小时候	小時候	xiao3shi2hou5	in childhood; when one was young
+出国	出國	chu1guo2	go abroad
+桌游	桌遊	zhuo1you2	board game
+有事儿	有事兒	you3shi4r5	to have a problem; to have something to do
+爬山	爬山	pa2shan1	to hike, to go mountain climbing
+加入	加入	jia1ru4	to join; add; enter; put in
+复习	復習	fu4xi2	revise; to review
+紧张	緊張	jin3zhang1	nervous; strained; stressed out
+油	油	you2	oil; oily; sly
+加油	加油	jia1you2	refuel; lubricate; make an extra effort; cheer sb. on; Go!; Step on it!; Encore!
+明天	明天	ming2tian1	tomorrow
+聪明	聰明	cong1ming5	intelligent; clever; bright; smart
+后天	後天	hou4tian1	the day after tomorrow
+天气	天氣	tian1qi4	weather
+外地	外地	wai4di4	other places; foreign lands
+钓鱼	釣魚	diao4yu2	go fishing; fishing
