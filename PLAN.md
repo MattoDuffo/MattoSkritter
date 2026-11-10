@@ -197,6 +197,13 @@ simplified  traditional  numbered pinyin   definition
 | Likely typos | 请家 "to ask to leave" (probably 请假), 挽/輓 | Show an import report listing words not found in CC-CEDICT, so you can fix or keep them |
 | Trailing spaces | `what about...? ` | Trim |
 
+**"Export all" file** (`skritter-export-all-2026-11-11.tsv`): same 4 columns but **no progress data** either. Differences:
+- It lists the 714 items you have actually *started studying* (one per item, no duplicates), including about 25 radicals (宀, 讠, 氵…) and about 95 words that are in none of the lists.
+- Column 2 repeats the simplified form instead of the traditional one, so it can't be used to tell identical-looking words apart. Look those words up in the list files instead, or pick the dictionary entry whose meaning matches the definition.
+- 481 words in the list files are *not* in it, meaning you never started them.
+
+**Import strategy:** words in "export all" start as *studied* (known but due soon, so the scheduler recalibrates within a few days); all other list words start as *new*. Words not in any list go into an extra list called "Skritter – other".
+
 **Lists:** each file becomes one list named after the file (`export-Words_from_duolingo.txt` → "Words from duolingo"). Items are shared across lists, so a word in two lists is studied once.
 
 ## 5. Decisions made
