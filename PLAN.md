@@ -9,6 +9,39 @@ A personal, customizable clone of the Skritter app for learning to write Mandari
 
 ---
 
+## 0. Your must-haves (fixes for what annoys you in Skritter)
+These are **part of the first version**, not later extras. Each is linked to the phase where it gets built.
+
+| # | Requirement | Design | Phase |
+|---|---|---|---|
+| M1 | **Remember my session size** | Every setting, including the number of cards per session, is saved locally the moment you change it. The session start screen offers your last choice. There is no hidden reset. | 2 |
+| M2 | **A "stubbornness" slider for new words** | See below. | 2 |
+| M3 | **Dark mode** | Follows the iPhone's light/dark setting by default, with a manual Light / Dark / Auto override. Colours are defined once as theme tokens, so every screen, including the writing canvas (ink, grid, hints), works in both modes. | 0 (tokens), 1 (canvas) |
+| M4 | **Create a new entry directly in the app** | See below. | 3 |
+
+### M2 — New-word stubbornness slider
+Skritter holds back new words until your "struggling" words are mastered. Here the slider sets how strict that gate is:
+
+- **Struggling words** are words learned recently, or failed recently, that the scheduler isn't yet confident about (low FSRS stability, or a lapse in the last few days).
+- **The slider (0–100)** sets how many struggling words you can have before new words stop coming:
+  - **0 = "Eager":** new words always come at your daily new-word limit, whatever happens.
+  - **50 = "Balanced":** new words slow down as struggling words pile up, and stop at around 30.
+  - **100 = "Skritter-strict":** new words stop until fewer than about 5 struggling words remain.
+- **Gradual, not on/off:** between those points the number of new words per day shrinks step by step instead of dropping straight from N to 0.
+- **Shows its reasoning:** the session screen says why, e.g. "2 new words today (12 struggling words, stubbornness 60)".
+- **Override button:** "Add 5 new words now" works whatever the slider says.
+- **Separate daily limit:** the daily new-word limit is its own setting. The slider only decides how much of it you get.
+
+### M4 — Add and edit entries in the app
+- **"＋ Add word"** is reachable from the home screen, the dictionary search, and the end of a session.
+- **Type in hanzi** (iOS Chinese keyboard or handwriting input). The app fills in pinyin and definition from CC-CEDICT as you type, and you can edit either one. If a word has several dictionary entries (几, 台…), you pick the right one.
+- **Words not in the dictionary** (names, slang, 大世界) are allowed: you type the pinyin and definition yourself.
+- **Choose list(s)** to add the word to, with "Personal" as the default. Choose to start it as *new* or *study it now*.
+- **Edit** any existing word's definition, pinyin or notes from the word page or right after a review. Edits are stored as your own version and never overwritten by dictionary updates.
+- **Missing stroke data:** if a character has none, the word is still added, but its writing part is disabled and the app tells you why.
+
+---
+
 ## 1. Skritter feature inventory (what we're copying)
 
 This checklist is the target for parity. Items are tagged **[MVP]** (needed for a usable first version) or **[P]** (needed for full parity).
@@ -134,7 +167,8 @@ What we gain: one codebase for iPad, Android, phone and desktop; instant updates
 
 ### Phase 2 — SRS & study sessions
 - [ ] Item-per-part model, plus `ts-fsrs` scheduling mapped to the four grades.
-- [ ] Queue builder: due items first, then new items limited by the daily new-item cap and drawn from active lists in order.
+- [ ] Queue builder: due items first, then new items limited by the daily new-item cap **and the stubbornness slider (M2)**, drawn from active lists in order.
+- [ ] Settings persistence: every setting saved on change, and session size remembered (M1).
 - [ ] Definition and Reading modes.
 - [ ] Session screen: progress bar, timer, undo last answer, and ban/known/reset actions.
 
@@ -158,8 +192,8 @@ What we gain: one codebase for iPad, Android, phone and desktop; instant updates
 
 **Parity checkpoint:** every item in Section 1 is checked off, and you can move your real daily study from Skritter to MattoSkritter.
 
-### Phase 6 — Your customizations (the point of the project)
-Ideas to choose from. Replace these with your own wishes:
+### Phase 6 — More customizations
+Your must-haves (section 0) are built in Phases 0–3. Further ideas to choose from later:
 - Your own grading rules (for example, stricter stroke direction, or forgiving stroke order for simple radicals).
 - Component-first learning: automatically queue a character's components before the character itself.
 - Sentence mode: write whole sentences from a source text, or from a cloze with characters left out.
