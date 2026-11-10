@@ -1,6 +1,6 @@
 # MattoSkritter — Project Plan
 
-A personal, customizable clone of the Skritter app for learning to write Chinese characters and Japanese kanji. The plan has two stages:
+A personal, customizable clone of the Skritter app for learning to write Mandarin Chinese (Simplified characters), used mainly on an **iPhone**, by a single user. The plan has two stages:
 
 1. **Parity:** rebuild Skritter's core features with open data and open-source building blocks.
 2. **Customization:** add the features Skritter lacks or that fit your own study habits.
@@ -37,8 +37,8 @@ This checklist is the target for parity. Items are tagged **[MVP]** (needed for 
 - Ban or suspend an item, mark it as known, or reset its progress. **[MVP]**
 
 ### 1.3 Content & lists
-- A built-in dictionary for Chinese (Simplified and Traditional) and Japanese. **[MVP: Chinese]**
-- Vocab lists, including pre-made textbook-style lists (HSK 1–6 / new HSK 1–9, JLPT N5–N1). **[MVP: HSK]**
+- A built-in Mandarin dictionary (Simplified). **[MVP]**
+- Vocab lists, including pre-made textbook-style lists (HSK 1–6 / new HSK 1–9). **[MVP]**
 - Custom lists: create, edit, reorder and split into sections, and import from CSV/TSV/Anki/Pleco exports. **[MVP: create + CSV]**
 - Choose which lists are "studying" and which are paused, plus the order new items are added from. **[MVP]**
 - Word detail page with: definitions, readings, components/radicals, stroke animation, example words, user notes, and mnemonics. **[MVP basic, P full]**
@@ -52,10 +52,10 @@ This checklist is the target for parity. Items are tagged **[MVP]** (needed for 
 - Forecast of upcoming reviews. **[P]**
 
 ### 1.5 Settings & accounts
-- Choose the target language, script (Simplified/Traditional), and which parts to study. **[MVP]**
+- Choose which parts to study (writing, reading, definition, tone). **[MVP]**
 - Stroke strictness, hint behaviour, squigs on/off, autoplay audio, grading behaviour, and the canvas grid style (米字格 / 田字格 / none). **[MVP subset]**
-- User account plus sync across devices. **[P]**
-- Works offline and syncs later. **[P]**
+- Works fully offline. **[MVP]**
+- Backup/restore to a file instead of accounts and sync (single user). **[MVP]**
 - Works well on tablet + stylus, phone and desktop (mouse). **[MVP]**
 
 ---
@@ -66,9 +66,7 @@ This checklist is the target for parity. Items are tagged **[MVP]** (needed for 
 |---|---|---|
 | Chinese stroke data (SVG paths + medians) | **Make Me a Hanzi** (`graphics.txt`, `dictionary.txt`) | Arphic Public License / LGPL |
 | Stroke animation + quiz (recognition) | **Hanzi Writer** (JS library) | MIT |
-| Japanese kanji strokes | **KanjiVG** | CC BY-SA 3.0 |
 | Chinese dictionary | **CC-CEDICT** | CC BY-SA 4.0 |
-| Japanese dictionary | **JMdict / KANJIDIC2** | CC BY-SA 4.0 |
 | HSK / JLPT word lists | Public HSK/JLPT lists (e.g. `hsk-vocabulary` repos, Tanos lists) | Varies, check each |
 | Character decomposition | Make Me a Hanzi `decomposition` field / CJK Decomp | Open |
 | Audio | Browser Web Speech API (TTS) first, then optionally recorded syllable sets (e.g. open Mandarin syllable recordings) | — |
@@ -80,7 +78,7 @@ This checklist is the target for parity. Items are tagged **[MVP]** (needed for 
 
 ## 3. Proposed architecture
 
-**Recommendation:** build a local-first **Progressive Web App (PWA)** in TypeScript. A single codebase runs on iPad/Android tablets with a stylus, on phones and on desktop. It installs to the home screen and works offline, with no app-store friction.
+**Recommendation:** build a local-first **Progressive Web App (PWA)** in TypeScript. It is tuned for iPhone Safari (finger writing) but still runs on any device. It installs to the home screen and works offline, with no app-store friction.
 
 ```
 apps/web            React + Vite + TypeScript PWA
@@ -92,14 +90,14 @@ apps/web            React + Vite + TypeScript PWA
   src/dict/         dictionary search + word detail
   src/stats/        progress dashboard
 packages/content    build scripts that turn CC-CEDICT, MakeMeAHanzi, HSK etc. into compact JSON shards
-server/ (later)     sync API (e.g. Supabase or a small Node + Postgres service)
+(no server: single user, local data + file backup)
 ```
 
 **Trade-offs of a web app vs. native apps**
 | What we give up | Impact | Mitigation |
 |---|---|---|
-| Native pen latency on iPad (PencilKit stroke prediction) | A few ms of extra ink lag. Noticeable to purists, fine for practice. | Pointer Events with `getCoalescedEvents()`/`getPredictedEvents()`, a lightweight canvas renderer, and `touch-action: none` |
-| Guaranteed local storage (Safari can evict data of sites not opened recently) | Risk of losing offline progress | Install to the home screen, call `navigator.storage.persist()`, add a JSON export/backup button, and sync later |
+| Native touch latency (iOS stroke prediction) | A few ms of extra ink lag when writing with a finger. Fine for practice. | Pointer Events with `getCoalescedEvents()`/`getPredictedEvents()`, a lightweight canvas renderer, and `touch-action: none` |
+| Guaranteed local storage (Safari can evict data of sites not opened recently) | Risk of losing offline progress | Install to the home screen, call `navigator.storage.persist()`, and add a JSON export/backup button |
 | Reliable reminder notifications | Web push works on iOS only for home-screen-installed apps (iOS 16.4+) | Use web push where available, plus an optional email reminder later |
 | Background sync, widgets, Siri/shortcuts, haptics on iOS | No "due today" widget and no vibration on wrong strokes | Not core to studying, so skip it |
 | High-quality offline audio | Web Speech voices differ by device, and autoplay requires a user tap first | Bundle recorded syllable audio later |
@@ -109,7 +107,7 @@ What we gain: one codebase for iPad, Android, phone and desktop; instant updates
 
 **Key design decisions**
 - **Data model:** `Word` (dictionary entry), `Character` (stroke data), `List` → `Section` → `ListItem(wordId)`, `Item(wordId, part, srsState)`, `Review(itemId, grade, timestamp, duration, mistakes)`. Keeping the review log means the scheduler and stats can be recomputed at any time.
-- **Local-first:** all study happens against IndexedDB. Sync, added later, replays review logs, which avoids merge conflicts on SRS state.
+- **Local-first:** all study happens against IndexedDB, with no server. Backups are a JSON export of lists and the review log.
 - **Lazy content loading:** stroke data is split into small files and fetched per character, then cached by the service worker.
 - **Testing:** Vitest for the SRS, queue and import logic. Playwright for study-flow end-to-end tests, including simulated strokes on the canvas.
 
@@ -123,7 +121,12 @@ What we gain: one codebase for iPad, Android, phone and desktop; instant updates
 - [ ] Add a `CREDITS.md` file with data licenses.
 
 ### Phase 1 — Writing practice core (MVP heart)
-- [ ] Canvas component with stylus/touch/mouse support, pressure-insensitive smoothing and grid styles.
+- [ ] Canvas component tuned for **iPhone finger writing**:
+  - a square canvas filling the screen width, with buttons in thumb reach below it;
+  - `touch-action: none` and blocking of double-tap zoom, pull-to-refresh and text selection;
+  - keeping strokes away from the left-edge "swipe back" gesture area, and respecting safe areas (notch, home bar);
+  - more forgiving stroke matching than for a stylus, because a finger is less precise and hides the stroke while writing.
+- [ ] Test early on a real iPhone (installed to the home screen) before building the rest.
 - [ ] Stroke recognition and snapping through Hanzi Writer quiz mode. Track the number of mistakes per stroke.
 - [ ] Hints: flash the next stroke after N misses, tap to reveal, show the outline.
 - [ ] Multi-character word writing flow.
@@ -139,7 +142,8 @@ What we gain: one codebase for iPad, Android, phone and desktop; instant updates
 - [ ] Dictionary search (hanzi, pinyin with or without tones, English).
 - [ ] Word detail page: stroke animation, decomposition, example words, notes.
 - [ ] Built-in HSK lists, plus custom list creation and editing with sections.
-- [ ] CSV/TSV import (and Pleco/Anki export formats).
+- [ ] **Skritter list import**: parse your exported Skritter lists into MattoSkritter lists, matching each word against CC-CEDICT and flagging words not found. Choose per list whether imported words start as *new* or *known*.
+- [ ] Generic CSV/TSV import (and Pleco/Anki export formats).
 
 ### Phase 4 — Stats & daily goals
 - [ ] Daily goal + streak.
@@ -149,11 +153,8 @@ What we gain: one codebase for iPad, Android, phone and desktop; instant updates
 - [ ] Tone mode (gesture recognition for the 5 tones).
 - [ ] Raw squigs mode.
 - [ ] Audio (TTS first, recorded audio later).
-- [ ] Traditional characters toggle.
 - [ ] Custom definitions and mnemonics.
 - [ ] Related-item scheduling (character ↔ word).
-- [ ] Accounts + cross-device sync.
-- [ ] Japanese support (KanjiVG + JMdict, kana readings, JLPT lists).
 
 **Parity checkpoint:** every item in Section 1 is checked off, and you can move your real daily study from Skritter to MattoSkritter.
 
@@ -170,12 +171,16 @@ Ideas to choose from. Replace these with your own wishes:
 
 ---
 
-## 5. Open questions for you
-1. **Language first:** Mandarin Chinese (assumed), Japanese, or both from the start?
-2. **Simplified, Traditional, or both?**
-3. **Main device:** iPad + Apple Pencil, Android tablet, phone, or desktop? This affects canvas tuning.
-4. **Single-user local app, or accounts + sync early?**
-5. **Import your existing Skritter progress?** Skritter allows exporting vocab lists, which could seed your lists and "known" items.
+## 5. Decisions made
+| Question | Decision | Consequence |
+|---|---|---|
+| Language | Mandarin only | Japanese (KanjiVG, JMdict, JLPT) is out of scope |
+| Script | Simplified only | No Traditional toggle; Simplified data only, so downloads are smaller |
+| Main device | iPhone | Finger writing on a small screen drives the canvas design; test on the phone from the start |
+| Users | Just you | No accounts, server or sync; local data with file backup |
+| Skritter lists | Import them | Skritter list import is part of Phase 3 |
+
+**Needed from you for the Skritter import:** an exported list file (or two) from your Skritter account, so the importer is built against the real format. Skritter's list export probably does not include your review history, so imported words would start as new or as known. If you can export review history or progress, send that too.
 
 ## 6. Immediate next step
-Once these questions are answered, start **Phase 0**: scaffold the repo and build the content pipeline. Then build a vertical slice: write one HSK 1 word on the canvas with stroke recognition, grade it, and see it scheduled.
+Start **Phase 0**: scaffold the web app and build the Mandarin content pipeline (CC-CEDICT, Make Me a Hanzi, HSK lists). Then build a vertical slice on the iPhone: write one HSK 1 word with your finger, have it checked and graded, and see it scheduled.
