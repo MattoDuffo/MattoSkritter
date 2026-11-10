@@ -152,6 +152,8 @@ What we gain: one codebase for iPad, Android, phone and desktop; instant updates
 - [ ] Scaffold the Vite + React + TS PWA, ESLint/Prettier, Vitest, Playwright, and GitHub Actions CI.
 - [ ] Content pipeline: CC-CEDICT + Make Me a Hanzi + HSK lists → JSON shards in `public/data`.
 - [ ] Add a `CREDITS.md` file with data licenses.
+- [ ] Deploy to Cloudflare Pages from the private repo and install on the iPhone home screen.
+- [ ] Theme tokens with light/dark mode (M3).
 
 ### Phase 1 — Writing practice core (MVP heart)
 - [ ] Canvas component tuned for **iPhone finger writing**:
@@ -239,6 +241,63 @@ simplified  traditional  numbered pinyin   definition
 **Import strategy:** words in "export all" start as *studied* (known but due soon, so the scheduler recalibrates within a few days); all other list words start as *new*. Words not in any list go into an extra list called "Skritter – other".
 
 **Lists:** each file becomes one list named after the file (`export-Words_from_duolingo.txt` → "Words from duolingo"). Items are shared across lists, so a word in two lists is studied once.
+
+## 4c. Design details (draft, to tune on your phone)
+
+### Grading rules (writing)
+- **Stroke matching:** Hanzi Writer's quiz mode, with more forgiving matching than its default because you write with a finger. The exact tolerance is tuned on your iPhone in Phase 1.
+- **Stroke order:** strict, so strokes must come in order. **Stroke direction:** lenient, so a stroke drawn backwards is accepted.
+- **A miss** is a stroke that isn't accepted.
+  - After **2 misses** on the same stroke, it flashes as a hint.
+  - After **3 misses**, it's drawn for you.
+- **Grade per character:**
+
+| What happened | Automatic grade |
+|---|---|
+| 0 misses, no hints | Got it |
+| 1–2 misses in total, nothing drawn for you | So-so |
+| Any stroke drawn for you, 3+ misses in total, or "reveal" tapped | Forgot |
+
+- **Too easy** is only given when you tap it yourself.
+- **Grade per word:** the worst grade among its characters.
+- **After writing:** the four grade buttons appear with the automatic grade highlighted. Tap another to override it.
+  - "Got it" moves on by itself after about 1 s, and you can turn that off.
+  - The other grades wait for your tap.
+- **Tone:** each syllable is a gesture: – (1st), / (2nd), ∨ (3rd), \ (4th), or a tap (neutral). One wrong tone = Forgot. Characters with several readings accept the word's main reading.
+- **Definition / reading:** you tap to reveal, then grade yourself.
+
+### Learning a new word
+1. **Intro card:** the word, pinyin, definition, audio, and the stroke animation for each character.
+2. **Trace:** you write over a faint outline with hints on. This isn't graded.
+3. **Write from memory** later in the same session. This is the first real grade, and the word is scheduled from there.
+
+There is a daily limit on new words (default 10), filtered by the stubbornness slider (M2).
+
+### Session structure
+- **Parts:** writing, tone, definition and reading are all on by default, and each can be turned off.
+- **Characters inside words:** when a multi-character word is added, each character not already studied gets its own writing item, as in Skritter. This can be switched off.
+- **Radicals:** the ~25 radicals you studied in Skritter are kept as items. New radicals are not added automatically.
+- **Order:** the most overdue cards come first. Different parts of the same word are kept apart so they don't give each other away.
+- **Session size:** the number of cards, remembered between sessions (M1).
+- **Review cap after import:** at most 100 reviews per day, so the 714 imported "studied" words spread over the first week instead of arriving on day 1.
+
+### Hosting
+**Recommendation: Cloudflare Pages.** It's free, gives an HTTPS address, deploys automatically on every push, and works with a **private** GitHub repo. GitHub Pages would require a public repo, which would expose your word lists, or a paid plan.
+
+### Stroke data coverage ✅ checked
+All **809** characters and radicals in your Skritter exports (including 讠 钅 辶 礻 阝 忄 饣 氵 艹 刂 亻) are covered by Hanzi Writer's stroke data (`hanzi-writer-data` 2.0.1). Nothing is missing.
+
+### Backups
+- **Restore:** "Back up now" exports a JSON file (lists, edits, settings and the full review log) through the iOS share sheet, so you can save it to Files or iCloud Drive. "Restore" reads that file back.
+- **Weekly prompt:** if no backup was made in 7 days, a banner asks "Back up now?".
+- **Persistent storage:** the app asks Safari to keep its storage permanently (`navigator.storage.persist()`) and shows whether that was granted.
+
+### First version is done when…
+- You do your **daily reviews only in MattoSkritter for 7 days in a row**, without going back to Skritter.
+- Correct finger strokes are accepted the first time **almost always**. If you notice false rejections more than about once a session, the tuning isn't done.
+- It works **offline** (airplane mode) once installed to the home screen.
+- **No data is lost** across app closes, iPhone restarts and a backup → restore round trip.
+- All four must-haves (section 0) work.
 
 ## 5. Decisions made
 | Question | Decision | Consequence |
