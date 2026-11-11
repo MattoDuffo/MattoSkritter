@@ -82,8 +82,8 @@ export function Settings() {
       <div className="card">
         <h2>Writing</h2>
         <label className="field">
-          <span>Stroke matching: {s.leniency <= 1 ? 'strict' : s.leniency <= 1.4 ? 'normal (finger)' : 'forgiving'} ({s.leniency.toFixed(1)})</span>
-          <input type="range" min={0.6} max={2.2} step={0.1} value={s.leniency} onChange={(e) => update({ leniency: Number(e.target.value) })} />
+          <span>Stroke matching: {s.leniency <= 1.2 ? 'strict' : s.leniency <= 2 ? 'normal (finger)' : 'forgiving'} ({s.leniency.toFixed(1)})</span>
+          <input type="range" min={0.6} max={3} step={0.1} value={s.leniency} onChange={(e) => update({ leniency: Number(e.target.value) })} />
         </label>
         <label className="field">
           <span>Flash a hint after {s.hintAfterMisses} wrong attempt{s.hintAfterMisses === 1 ? '' : 's'}</span>

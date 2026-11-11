@@ -1,12 +1,16 @@
 import HanziWriter from 'hanzi-writer';
 import { useEffect, useRef, useState } from 'react';
 import { charDataLoader, loadStrokes } from '../lib/strokes';
+import { DEFAULT_SETTINGS } from '../lib/settings';
 
 export function cssVar(name: string): string {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || '#888';
 }
 
 const TRANSPARENT = 'rgba(0,0,0,0)';
+
+/** Width of the user's pen, both while drawing and for the ink left behind. */
+const penWidth = (size: number) => Math.max(7, Math.round(size / 26));
 
 export function Grid({ size, kind }: { size: number; kind: 'mi' | 'tian' | 'none' }) {
   if (kind === 'none') return null;
@@ -60,7 +64,7 @@ export function Writer({
   char,
   size,
   mode,
-  leniency = 1.4,
+  leniency = DEFAULT_SETTINGS.leniency,
   hintAfterMisses = 2,
   drawAfterMisses = 3,
   callbacks,
@@ -97,7 +101,7 @@ export function Writer({
       highlightColor: cssVar('--hint'),
       drawingColor: cssVar('--stroke-draw'),
       radicalColor: null,
-      drawingWidth: Math.max(14, Math.round(size / 14)),
+      drawingWidth: penWidth(size),
       strokeAnimationSpeed: 1.4,
       delayBetweenStrokes: 180,
       strokeFadeDuration: 250,
@@ -184,7 +188,7 @@ export function Writer({
               <path key={i} d={p} />
             ))}
           </g>
-          <g fill="none" stroke="var(--ink)" strokeWidth={Math.max(14, Math.round(size / 14))} strokeLinecap="round" strokeLinejoin="round">
+          <g fill="none" stroke="var(--ink)" strokeWidth={penWidth(size)} strokeLinecap="round" strokeLinejoin="round">
             {ink.map((p, i) => (
               <path key={i} d={p} />
             ))}

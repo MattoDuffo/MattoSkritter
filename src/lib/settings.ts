@@ -30,7 +30,7 @@ export const DEFAULT_SETTINGS: Settings = {
   theme: 'auto',
   autoplayAudio: true,
   grid: 'mi',
-  leniency: 1.4,
+  leniency: 1.8,
   hintAfterMisses: 2,
   drawAfterMisses: 3,
   dailyGoalMinutes: 15,
@@ -43,7 +43,9 @@ const listeners = new Set<(s: Settings) => void>();
 export async function loadSettings(): Promise<Settings> {
   if (cache) return cache;
   const row = await db.kv.get('settings');
-  const stored = (row?.value ?? {}) as Partial<Settings>;
+  const stored = { ...((row?.value ?? {}) as Partial<Settings>) };
+  // 1.4 was the old default: move users who never touched it to the looser new default
+  if (stored.leniency === 1.4) delete stored.leniency;
   cache = { ...DEFAULT_SETTINGS, ...stored, parts: { ...DEFAULT_SETTINGS.parts, ...(stored.parts ?? {}) } };
   return cache;
 }
