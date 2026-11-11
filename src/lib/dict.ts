@@ -1,4 +1,4 @@
-import { hanChars, marked, normaliseQuery, numbered, plain } from './pinyin';
+import { hanChars, marked, normaliseQuery, numbered, plain, toMarks } from './pinyin';
 
 /** [simplified, traditional ('' if same), numbered pinyin, definitions "; "-joined] */
 export type DictRow = [string, string, string, string];
@@ -18,7 +18,21 @@ let markIdx: string[] | null = null;
 let charFreq: Map<string, number> | null = null;
 let loading: Promise<void> | null = null;
 
-const toEntry = (r: DictRow): DictEntry => ({ simp: r[0], trad: r[1] || r[0], pinyin: r[2], def: r[3] });
+/** "CL:個|个[ge4],隻|只[zhi1]" -> "measure word: 个 gè, 只 zhī" */
+export function prettyDef(def: string): string {
+  return def.replace(/CL:([^;]+)/g, (_, list: string) =>
+    'measure word: ' +
+    list
+      .split(',')
+      .map((m) => {
+        const mm = m.trim().match(/^(?:[^|[]+\|)?([^[]+)\[([^\]]+)\]$/);
+        return mm ? `${mm[1]} ${toMarks(mm[2].replace(/\s+/g, ''))}` : m.trim();
+      })
+      .join(', '),
+  );
+}
+
+const toEntry = (r: DictRow): DictEntry => ({ simp: r[0], trad: r[1] || r[0], pinyin: r[2], def: prettyDef(r[3]) });
 
 export function setDictRows(r: DictRow[]) {
   rows = r;

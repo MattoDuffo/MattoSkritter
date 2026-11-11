@@ -614,9 +614,13 @@ input[type='range'] {
   overflow: hidden;
 }
 .canvas-wrap > svg.grid,
+.canvas-wrap > svg.ink,
 .canvas-wrap > .writer {
   position: absolute;
   inset: 0;
+}
+.canvas-wrap > svg.ink {
+  pointer-events: none;
 }
 .canvas-wrap .writer svg {
   display: block;

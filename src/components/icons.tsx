@@ -76,6 +76,12 @@ export const Icon = {
       <path d="m6 4 14 8-14 8Z" />
     </svg>
   ),
+  clear: () => (
+    <svg viewBox="0 0 24 24" {...P}>
+      <path d="m7 21-4.3-4.3a1 1 0 0 1 0-1.4l9.9-9.9a1 1 0 0 1 1.4 0l5.6 5.6a1 1 0 0 1 0 1.4L13 21" />
+      <path d="M22 21H7M5 11l9 9" />
+    </svg>
+  ),
   outline: () => (
     <svg viewBox="0 0 24 24" {...P}>
       <rect x="4" y="4" width="16" height="16" rx="2" strokeDasharray="3 3" />
