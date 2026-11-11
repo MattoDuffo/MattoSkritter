@@ -1,10 +1,12 @@
 import HanziWriter from 'hanzi-writer';
-import { useEffect, useRef } from 'react';
-import { charDataLoader } from '../lib/strokes';
+import { useEffect, useRef, useState } from 'react';
+import { charDataLoader, loadStrokes } from '../lib/strokes';
 
 export function cssVar(name: string): string {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || '#888';
 }
+
+const TRANSPARENT = 'rgba(0,0,0,0)';
 
 export function Grid({ size, kind }: { size: number; kind: 'mi' | 'tian' | 'none' }) {
   if (kind === 'none') return null;
@@ -27,8 +29,9 @@ export function Grid({ size, kind }: { size: number; kind: 'mi' | 'tian' | 'none
 }
 
 export interface QuizCallbacks {
-  onMistake?: (d: { strokeNum: number; mistakesOnStroke: number; totalMistakes: number }, writer: HanziWriter) => void;
-  onCorrectStroke?: (d: { strokeNum: number; strokesRemaining: number }, writer: HanziWriter) => void;
+  /** `forced`: this was the last allowed miss, so the stroke was drawn for the user */
+  onMistake?: (d: { strokeNum: number; mistakesOnStroke: number; totalMistakes: number; forced: boolean }) => void;
+  onCorrectStroke?: (d: { strokeNum: number; strokesRemaining: number }) => void;
   onComplete?: (d: { totalMistakes: number }) => void;
 }
 
@@ -38,6 +41,8 @@ interface Props {
   mode: 'quiz' | 'trace' | 'animate' | 'show';
   leniency?: number;
   hintAfterMisses?: number;
+  /** quiz: draw the stroke for the user after this many misses on it */
+  drawAfterMisses?: number;
   callbacks?: QuizCallbacks;
   writerRef?: React.MutableRefObject<HanziWriter | null>;
   onError?: () => void;
@@ -45,24 +50,49 @@ interface Props {
   nonce?: number;
 }
 
-/** Hanzi Writer wrapper: quiz (write from memory), trace (outline shown), animate, or show. */
-export function Writer({ char, size, mode, leniency = 1.4, hintAfterMisses = 2, callbacks, writerRef, onError, nonce }: Props) {
+/**
+ * Hanzi Writer wrapper: quiz (write from memory), trace (outline shown), animate, or show.
+ * In quiz mode the character itself stays hidden while writing: accepted strokes stay as the
+ * user's own ink, strokes drawn for the user appear as model strokes, and the real character
+ * only appears once it is complete.
+ */
+export function Writer({
+  char,
+  size,
+  mode,
+  leniency = 1.4,
+  hintAfterMisses = 2,
+  drawAfterMisses = 3,
+  callbacks,
+  writerRef,
+  onError,
+  nonce,
+}: Props) {
   const el = useRef<HTMLDivElement>(null);
   const cb = useRef(callbacks);
   cb.current = callbacks;
+  const [ink, setInk] = useState<string[]>([]); // user's accepted strokes (screen coordinates)
+  const [model, setModel] = useState<string[]>([]); // strokes drawn for the user (character coordinates)
+  const [showInk, setShowInk] = useState(true);
+  const padding = Math.round(size * 0.05);
+  const hidden = mode === 'quiz';
 
   useEffect(() => {
     const host = el.current;
     if (!host) return;
     host.innerHTML = '';
+    setInk([]);
+    setModel([]);
+    setShowInk(true);
     let cancelled = false;
+    const inkColor = cssVar('--ink');
     const writer = HanziWriter.create(host, char, {
       width: size,
       height: size,
-      padding: Math.round(size * 0.05),
+      padding,
       showCharacter: mode === 'show',
       showOutline: mode === 'trace' || mode === 'animate',
-      strokeColor: cssVar('--ink'),
+      strokeColor: hidden ? TRANSPARENT : inkColor,
       outlineColor: cssVar('--outline'),
       highlightColor: cssVar('--hint'),
       drawingColor: cssVar('--stroke-draw'),
@@ -77,17 +107,57 @@ export function Writer({ char, size, mode, leniency = 1.4, hintAfterMisses = 2, 
         if (!cancelled) onError?.();
       },
     });
+    // Reveal the real character (used on completion and by "reveal").
+    const revealChar = () => {
+      writer.updateColor('strokeColor', inkColor, { duration: 0 });
+      // radical strokes (e.g. 阝 in 都) have their own colour
+      writer.updateColor('radicalColor', inkColor, { duration: 0 });
+    };
+    (writer as HanziWriter & { revealChar?: () => void }).revealChar = () => {
+      revealChar();
+      setShowInk(false);
+    };
     if (writerRef) writerRef.current = writer;
-    if (mode === 'quiz' || mode === 'trace') {
+    const startQuiz = () =>
       writer.quiz({
         leniency,
         showHintAfterMisses: mode === 'trace' ? 1 : hintAfterMisses,
         acceptBackwardsStrokes: true,
         highlightOnComplete: true,
-        onMistake: (d) => cb.current?.onMistake?.(d, writer),
-        onCorrectStroke: (d) => cb.current?.onCorrectStroke?.(d, writer),
-        onComplete: (d) => cb.current?.onComplete?.(d),
+        onMistake: (d) => {
+          const forced = mode === 'quiz' && d.mistakesOnStroke >= drawAfterMisses;
+          if (forced) {
+            if (hidden) {
+              loadStrokes(char)
+                .then((data) => !cancelled && setModel((m) => [...m, data.strokes[d.strokeNum]]))
+                .catch(() => undefined);
+            }
+            queueMicrotask(() => writer.skipQuizStroke());
+          }
+          cb.current?.onMistake?.({ ...d, forced });
+        },
+        onCorrectStroke: (d) => {
+          if (hidden) setInk((s) => [...s, d.drawnPath.pathString]);
+          cb.current?.onCorrectStroke?.(d);
+        },
+        onComplete: (d) => {
+          if (hidden) {
+            revealChar();
+            setTimeout(() => !cancelled && setShowInk(false), 150);
+          }
+          cb.current?.onComplete?.(d);
+        },
       });
+    // "Clear": restart the current character on the same writer, without revealing it.
+    (writer as HanziWriter & { restartQuiz?: () => void }).restartQuiz = () => {
+      writer.cancelQuiz();
+      setInk([]);
+      setModel([]);
+      setShowInk(true);
+      startQuiz();
+    };
+    if (mode === 'quiz' || mode === 'trace') {
+      startQuiz();
     } else if (mode === 'animate') {
       writer.animateCharacter();
     }
@@ -102,7 +172,36 @@ export function Writer({ char, size, mode, leniency = 1.4, hintAfterMisses = 2, 
       host.innerHTML = '';
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [char, size, mode, leniency, hintAfterMisses, nonce]);
+  }, [char, size, mode, leniency, hintAfterMisses, drawAfterMisses, nonce]);
 
-  return <div className="writer" ref={el} data-char={char} data-mode={mode} style={{ width: size, height: size }} />;
+  const t = HanziWriter.getScalingTransform(size, size, padding);
+  return (
+    <>
+      {hidden && showInk && (ink.length > 0 || model.length > 0) && (
+        <svg className="ink" width={size} height={size} aria-hidden>
+          <g transform={t.transform} fill="var(--ink)">
+            {model.map((p, i) => (
+              <path key={i} d={p} />
+            ))}
+          </g>
+          <g fill="none" stroke="var(--ink)" strokeWidth={Math.max(14, Math.round(size / 14))} strokeLinecap="round" strokeLinejoin="round">
+            {ink.map((p, i) => (
+              <path key={i} d={p} />
+            ))}
+          </g>
+        </svg>
+      )}
+      <div className="writer" ref={el} data-char={char} data-mode={mode} style={{ width: size, height: size }} />
+    </>
+  );
+}
+
+/** Restart the quiz for the current character (the "Clear" button). */
+export function restartWriterQuiz(w: HanziWriter | null) {
+  (w as (HanziWriter & { restartQuiz?: () => void }) | null)?.restartQuiz?.();
+}
+
+/** Reveal a hidden quiz character (see Writer). */
+export function revealWriterChar(w: HanziWriter | null) {
+  (w as (HanziWriter & { revealChar?: () => void }) | null)?.revealChar?.();
 }

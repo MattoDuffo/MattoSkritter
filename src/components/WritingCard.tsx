@@ -7,7 +7,7 @@ import type { Settings } from '../lib/settings';
 import type { Grade4 } from '../lib/srs';
 import { GradeBar, Pinyin, useCanvasSize } from './common';
 import { Icon } from './icons';
-import { Grid, Writer } from './Writer';
+import { Grid, restartWriterQuiz, revealWriterChar, Writer } from './Writer';
 
 interface CharResult {
   mistakes: number;
@@ -60,7 +60,7 @@ export function WritingCard({
     next[idx] = r;
     setResults(next);
     if (idx + 1 < chars.length) {
-      setTimeout(() => setIdx(idx + 1), 350);
+      setTimeout(() => setIdx(idx + 1), 650);
     } else {
       setFinished(true);
       if (settings.autoplayAudio) speak(word.simp);
@@ -80,6 +80,7 @@ export function WritingCard({
     if (!w || finished) return;
     cur.current.revealed = true;
     w.cancelQuiz();
+    revealWriterChar(w);
     w.hideCharacter();
     w.animateCharacter({ onComplete: () => finishChar() });
   };
@@ -127,15 +128,16 @@ export function WritingCard({
           mode={mode === 'trace' || showOutline ? 'trace' : 'quiz'}
           leniency={settings.leniency}
           hintAfterMisses={settings.hintAfterMisses}
+          drawAfterMisses={settings.drawAfterMisses}
           writerRef={writerRef}
           onError={() => setError(true)}
           callbacks={{
-            onMistake: (d, w) => {
+            onMistake: (d) => {
               if (mode === 'trace') return;
               cur.current.mistakes++;
-              if (d.mistakesOnStroke >= settings.drawAfterMisses) {
+              if (d.forced) {
                 cur.current.drawn++;
-                queueMicrotask(() => w.skipQuizStroke());
+                stroke.current = d.strokeNum + 1;
               }
             },
             onCorrectStroke: (d) => {
@@ -163,6 +165,16 @@ export function WritingCard({
                 }}
               >
                 <Icon.outline />
+              </button>
+              <button
+                className="icon-btn"
+                aria-label="Clear and start this character again"
+                onClick={() => {
+                  stroke.current = 0;
+                  restartWriterQuiz(writerRef.current);
+                }}
+              >
+                <Icon.clear />
               </button>
               <button className="icon-btn" onClick={hint} aria-label="Hint: show next stroke">
                 <Icon.hint />
