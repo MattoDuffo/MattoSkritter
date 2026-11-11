@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Pinyin, Seg, TopBar, useToast } from '../components/common';
 import { db, type WordList } from '../lib/db';
-import { dictLoaded, loadDict, lookup, mergedEntry, type DictEntry } from '../lib/dict';
+import { dictLoaded, loadDict, lookup, mergedEntry, search, type DictEntry } from '../lib/dict';
 import { hanChars } from '../lib/pinyin';
 import { useSettings } from '../lib/settings';
 import { addToList, createList, introduceWord, upsertWord, writable } from '../lib/words';
@@ -24,6 +24,20 @@ export function AddWord({ initial, listId }: { initial?: string; listId?: number
   const [noStrokes, setNoStrokes] = useState(false);
   const [edited, setEdited] = useState(false);
   const [toast, showToast] = useToast();
+  const [showSug, setShowSug] = useState(!initial);
+  const [mine, setMine] = useState<Set<string>>(new Set());
+  const chosen = useRef<DictEntry | null>(null);
+
+  useEffect(() => {
+    db.words.toCollection().primaryKeys().then((k) => setMine(new Set(k as string[])));
+  }, []);
+
+  // Live CC-CEDICT suggestions while typing (hanzi, pinyin or English), like the Dictionary tab.
+  const suggestions = useMemo(() => {
+    const q = simp.trim();
+    if (!dictReady || !showSug || !q) return [];
+    return search(q, 8, mine);
+  }, [simp, dictReady, showSug, mine]);
 
   useEffect(() => {
     loadDict()
@@ -64,7 +78,14 @@ export function AddWord({ initial, listId }: { initial?: string; listId?: number
       }
       const opts = dictReady ? lookup(w) : [];
       setOptions(opts);
-      if (!own && !edited) {
+      const c = chosen.current;
+      if (!own && c && c.simp === w) {
+        // a suggestion was tapped: keep exactly that entry
+        const i = opts.findIndex((o) => o.pinyin === c.pinyin && o.def === c.def);
+        setPicked(i >= 0 ? i : null);
+        setPinyin(c.pinyin.replace(/\s+/g, ''));
+        setDef(c.def);
+      } else if (!own && !edited) {
         if (opts.length === 1) {
           setPicked(0);
           setPinyin(opts[0].pinyin.replace(/\s+/g, ''));
@@ -115,6 +136,8 @@ export function AddWord({ initial, listId }: { initial?: string; listId?: number
     if (existing) back();
     else {
       setSimp('');
+      chosen.current = null;
+      setShowSug(true);
       setPinyin('');
       setDef('');
       setNotes('');
@@ -127,24 +150,60 @@ export function AddWord({ initial, listId }: { initial?: string; listId?: number
       <TopBar title={existing ? 'Edit word' : 'Add word'} back />
       <div className="card">
         <label className="field">
-          <span>Word (hanzi)</span>
+          <span>Word — type hanzi, pinyin or English for suggestions</span>
           <input
             type="text"
             className="han"
             style={{ fontSize: 26 }}
             value={simp}
             autoFocus={!initial}
-            placeholder="准备"
+            placeholder="准备 · zhunbei · prepare"
+            autoCapitalize="off"
+            autoCorrect="off"
+            spellCheck={false}
             onChange={(e) => {
               setSimp(e.target.value);
+              chosen.current = null;
+              setShowSug(true);
               setEdited(false);
             }}
           />
         </label>
+        {suggestions.length > 0 && (
+          <div className="list" style={{ marginTop: -4 }}>
+            {suggestions.map((e, i) => (
+              <button
+                key={i}
+                className="list-item"
+                onClick={() => {
+                  chosen.current = e;
+                  setShowSug(false);
+                  setEdited(false);
+                  setSimp(e.simp);
+                  setPinyin(e.pinyin.replace(/\s+/g, ''));
+                  setDef(e.def);
+                }}
+              >
+                <span className="han">{e.simp}</span>
+                <div className="grow">
+                  <div className="small">
+                    <Pinyin value={e.pinyin} />
+                    {mine.has(e.simp) && (
+                      <span className="pill accent" style={{ marginLeft: 6 }}>
+                        in my lists
+                      </span>
+                    )}
+                  </div>
+                  <div className="small muted ellipsis">{e.def}</div>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
         {!dictReady && <p className="small muted">Loading dictionary…</p>}
         {existing && <p className="small pill accent">Already in your collection — editing your version</p>}
         {noStrokes && simp.trim() && <p className="small" style={{ color: 'var(--warn)' }}>No stroke data for some characters: writing practice will be disabled for this word.</p>}
-        {options.length > 1 && (
+        {options.length > 1 && suggestions.length === 0 && (
           <div style={{ marginBottom: 12 }}>
             <div className="small muted" style={{ marginBottom: 4 }}>
               Several dictionary entries — pick one:

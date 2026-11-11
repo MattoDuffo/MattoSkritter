@@ -1,9 +1,15 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { search, setDictRows } from '../src/lib/dict';
+import { prettyDef, search, setDictRows } from '../src/lib/dict';
 
 const file = path.join(__dirname, '..', 'public', 'data', 'dict.json');
+
+describe('definitions', () => {
+  it('formats measure words', () => {
+    expect(prettyDef('dumpling; pot-sticker; CL:個|个[ge4],隻|只[zhi1]')).toBe('dumpling; pot-sticker; measure word: 个 gè, 只 zhī');
+  });
+});
 
 // Needs the generated dictionary (npm run data).
 describe.skipIf(!fs.existsSync(file))('dictionary search', () => {
