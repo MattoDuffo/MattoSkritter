@@ -2,6 +2,7 @@ import HanziWriter from 'hanzi-writer';
 import { useEffect, useRef, useState } from 'react';
 import { charDataLoader, loadStrokes } from '../lib/strokes';
 import { DEFAULT_SETTINGS } from '../lib/settings';
+import { parsePath, taperedStroke, type Pt } from '../lib/ink';
 
 export function cssVar(name: string): string {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || '#888';
@@ -9,8 +10,8 @@ export function cssVar(name: string): string {
 
 const TRANSPARENT = 'rgba(0,0,0,0)';
 
-/** Width of the user's pen, both while drawing and for the ink left behind. */
-const penWidth = (size: number) => Math.max(7, Math.round(size / 26));
+/** Full width of the user's pen (the middle of a stroke; the ends taper off). */
+const penWidth = (size: number) => Math.max(5, Math.round(size / 38));
 
 export function Grid({ size, kind }: { size: number; kind: 'mi' | 'tian' | 'none' }) {
   if (kind === 'none') return null;
@@ -73,6 +74,7 @@ export function Writer({
   nonce,
 }: Props) {
   const el = useRef<HTMLDivElement>(null);
+  const live = useRef<SVGPathElement>(null);
   const cb = useRef(callbacks);
   cb.current = callbacks;
   const [ink, setInk] = useState<string[]>([]); // user's accepted strokes (screen coordinates)
@@ -99,7 +101,8 @@ export function Writer({
       strokeColor: hidden ? TRANSPARENT : inkColor,
       outlineColor: cssVar('--outline'),
       highlightColor: cssVar('--hint'),
-      drawingColor: cssVar('--stroke-draw'),
+      // the stroke being drawn is rendered by us (tapered ink), see the effect below
+      drawingColor: TRANSPARENT,
       radicalColor: null,
       drawingWidth: penWidth(size),
       strokeAnimationSpeed: 1.4,
@@ -178,6 +181,51 @@ export function Writer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [char, size, mode, leniency, hintAfterMisses, drawAfterMisses, nonce]);
 
+  // Live stroke under the finger, drawn as tapered ink. Hanzi Writer still does the matching.
+  const drawing = mode === 'quiz' || mode === 'trace';
+  useEffect(() => {
+    const host = el.current;
+    const path = live.current;
+    if (!host || !path || !drawing) return;
+    const width = penWidth(size);
+    let id: number | null = null;
+    let pts: Pt[] = [];
+    let rect = host.getBoundingClientRect();
+    const at = (e: PointerEvent) => ({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+    const down = (e: PointerEvent) => {
+      if (id !== null) return;
+      id = e.pointerId;
+      rect = host.getBoundingClientRect();
+      pts = [at(e)];
+      path.style.transition = 'none';
+      path.style.opacity = '1';
+      path.setAttribute('d', '');
+    };
+    const move = (e: PointerEvent) => {
+      if (e.pointerId !== id) return;
+      const events = e.getCoalescedEvents?.() ?? [];
+      for (const c of events.length ? events : [e]) pts.push(at(c));
+      path.setAttribute('d', taperedStroke(pts, width));
+    };
+    const up = (e: PointerEvent) => {
+      if (e.pointerId !== id) return;
+      id = null;
+      path.style.transition = 'opacity 250ms ease-out';
+      path.style.opacity = '0';
+    };
+    host.addEventListener('pointerdown', down);
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+    window.addEventListener('pointercancel', up);
+    return () => {
+      host.removeEventListener('pointerdown', down);
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+      window.removeEventListener('pointercancel', up);
+      path.setAttribute('d', '');
+    };
+  }, [drawing, size, char, nonce]);
+
   const t = HanziWriter.getScalingTransform(size, size, padding);
   return (
     <>
@@ -188,14 +236,19 @@ export function Writer({
               <path key={i} d={p} />
             ))}
           </g>
-          <g fill="none" stroke="var(--ink)" strokeWidth={penWidth(size)} strokeLinecap="round" strokeLinejoin="round">
+          <g fill="var(--ink)">
             {ink.map((p, i) => (
-              <path key={i} d={p} />
+              <path key={i} d={taperedStroke(parsePath(p), penWidth(size))} />
             ))}
           </g>
         </svg>
       )}
       <div className="writer" ref={el} data-char={char} data-mode={mode} style={{ width: size, height: size }} />
+      {drawing && (
+        <svg className="ink" width={size} height={size} aria-hidden>
+          <path ref={live} fill="var(--stroke-draw)" />
+        </svg>
+      )}
     </>
   );
 }
