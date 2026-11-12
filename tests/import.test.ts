@@ -56,8 +56,9 @@ describe('import + session', () => {
     const { steps, newWords } = await buildSession(s, { size: 30, now: now + 3600_000 });
     expect(newWords.length).toBeGreaterThan(0);
     expect(steps.filter((x) => x.kind === 'intro').length).toBe(newWords.length);
+    const fam = (x: (typeof steps)[number]) => (x.kind === 'intro' ? x.wordId : x.family ?? x.wordId);
     for (let i = 1; i < steps.length; i++) {
-      if (steps[i].kind === 'review' && steps[i - 1].kind === 'review') expect(steps[i].wordId).not.toBe(steps[i - 1].wordId);
+      if (steps[i].kind === 'review' && steps[i - 1].kind === 'review') expect(fam(steps[i])).not.toBe(fam(steps[i - 1]));
     }
   });
 });

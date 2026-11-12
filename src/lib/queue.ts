@@ -4,8 +4,8 @@ import { isStruggling, newWordAllowance } from './srs';
 
 export type Step =
   | { kind: 'intro'; wordId: string }
-  | { kind: 'trace'; itemId: string; wordId: string }
-  | { kind: 'review'; itemId: string; wordId: string; part: Part; retry?: boolean };
+  | { kind: 'trace'; itemId: string; wordId: string; family?: string }
+  | { kind: 'review'; itemId: string; wordId: string; part: Part; retry?: boolean; family?: string };
 
 export interface StudyStatus {
   due: number; // reviews due now (enabled parts, not banned)
@@ -64,20 +64,58 @@ export async function studyStatus(s: Settings, now = Date.now()): Promise<StudyS
   };
 }
 
-/** Reorder so the same word never appears twice in a row (parts don't give each other away). */
-export function spreadByWord<T extends { wordId: string }>(steps: T[]): T[] {
+/** Cards that would give each other away: a word's parts, and the characters studied inside it. */
+export const familyOf = (s: { wordId: string; family?: string }) => s.family ?? s.wordId;
+
+/**
+ * Reorder so cards of the same word (reading, writing, meaning, its characters) are kept apart:
+ * a family is not repeated within the last `gap` cards when that can be avoided.
+ */
+export function spreadByWord<T extends { wordId: string; family?: string }>(steps: T[], maxGap = 6): T[] {
   const rest = [...steps];
   const out: T[] = [];
+  const families = new Set(steps.map(familyOf)).size;
+  const gap = Math.max(1, Math.min(maxGap, families - 1));
+  const lastAt = new Map<string, number>();
+  const remaining = new Map<string, number>();
+  for (const st of rest) remaining.set(familyOf(st), (remaining.get(familyOf(st)) ?? 0) + 1);
   while (rest.length) {
-    const last = out[out.length - 1]?.wordId;
-    const prev = out[out.length - 2]?.wordId;
-    let idx = rest.findIndex((s) => s.wordId !== last && s.wordId !== prev);
-    if (idx < 0) idx = rest.findIndex((s) => s.wordId !== last);
-    if (idx < 0) idx = 0;
-    out.push(rest.splice(idx, 1)[0]);
+    const recent = new Set(out.slice(-gap).map(familyOf));
+    // Among cards whose word wasn't seen in the last `gap` cards, prefer the word with the most
+    // cards still to place (so no word is left bunched up at the end), then the original order.
+    let idx = -1;
+    let most = -1;
+    rest.forEach((st, k) => {
+      const f = familyOf(st);
+      if (recent.has(f)) return;
+      const n = remaining.get(f)!;
+      if (n > most) {
+        most = n;
+        idx = k;
+      }
+    });
+    if (idx < 0) {
+      // no clean choice: take the card whose word was seen longest ago
+      let best = Infinity;
+      rest.forEach((st, k) => {
+        const at = lastAt.get(familyOf(st)) ?? -Infinity;
+        if (at < best) {
+          best = at;
+          idx = k;
+        }
+      });
+    }
+    const [step] = rest.splice(idx, 1);
+    const f = familyOf(step);
+    lastAt.set(f, out.length);
+    remaining.set(f, remaining.get(f)! - 1);
+    out.push(step);
   }
   return out;
 }
+
+/** Up to a day of randomness in the order of due cards (so the same cards don't always come together). */
+export const ORDER_JITTER_MS = 86_400_000;
 
 /**
  * Build a session: overdue reviews first (most overdue relative to interval), plus up to the
@@ -93,9 +131,10 @@ export async function buildSession(
 
   // Cards created but never answered (e.g. a session was left early) come back first.
   const unseen = items.filter((i) => i.card.state === 0);
+  const jitter = new Map(items.map((i) => [i.id, Math.random() * ORDER_JITTER_MS]));
   const due = items
     .filter((i) => i.card.state !== 0 && i.dueAt <= now)
-    .sort((a, b) => overdueRatio(b, now) - overdueRatio(a, now));
+    .sort((a, b) => a.dueAt + jitter.get(a.id)! - (b.dueAt + jitter.get(b.id)!));
 
   let newWords: string[] = [];
   const pending = await pendingNewWords();
@@ -113,7 +152,7 @@ export async function buildSession(
     : Math.max(0, Math.min(opts.size - newWords.length * parts, status.reviewCapLeft));
   const reviewItems = [...unseen, ...due].slice(0, reviewRoom);
   const reviewSteps: Step[] = spreadByWord(
-    reviewItems.map((i) => ({ kind: 'review' as const, itemId: i.id, wordId: i.wordId, part: i.part })),
+    reviewItems.map((i) => ({ kind: 'review' as const, itemId: i.id, wordId: i.wordId, part: i.part, family: i.charOf ?? i.wordId })),
   );
 
   // Interleave intros evenly through the reviews.
@@ -128,10 +167,6 @@ export async function buildSession(
   return { steps, newWords };
 }
 
-function overdueRatio(i: Item, now: number) {
-  const interval = Math.max(1, i.card.scheduled_days) * 86_400_000;
-  return (now - i.dueAt) / interval;
-}
 
 /** After an intro, its new cards: trace first for writing, the graded cards spread over the next steps. */
 export function stepsAfterIntro(created: Item[]): { immediate: Step[]; later: Step[] } {
@@ -139,8 +174,18 @@ export function stepsAfterIntro(created: Item[]): { immediate: Step[]; later: St
   const later: Step[] = [];
   const ordered = [...created].sort((a, b) => Number(!!a.charOf) - Number(!!b.charOf));
   for (const it of ordered) {
-    if (it.part === 'write' && !it.charOf) immediate.push({ kind: 'trace', itemId: it.id, wordId: it.wordId });
-    later.push({ kind: 'review', itemId: it.id, wordId: it.wordId, part: it.part });
+    const family = it.charOf ?? it.wordId;
+    if (it.part === 'write' && !it.charOf) immediate.push({ kind: 'trace', itemId: it.id, wordId: it.wordId, family });
+    later.push({ kind: 'review', itemId: it.id, wordId: it.wordId, part: it.part, family });
   }
-  return { immediate, later };
+  return { immediate, later: shuffle(later) };
+}
+
+function shuffle<T>(a: T[]): T[] {
+  const r = [...a];
+  for (let i = r.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [r[i], r[j]] = [r[j], r[i]];
+  }
+  return r;
 }

@@ -37,8 +37,19 @@ export function newCard(now: number): StoredCard {
 
 const RATING: Record<Grade4, Grade> = { 1: Rating.Again, 2: Rating.Hard, 3: Rating.Good, 4: Rating.Easy };
 
-export function review(card: StoredCard, grade: Grade4, now: number): StoredCard {
-  return fromCard(scheduler.next(toCard(card), new Date(now), RATING[grade]).card);
+/**
+ * Schedule the next review. Intervals of a day or more get up to a day of random shift, so the
+ * different parts of a word (and words learned together) drift apart instead of always coming due
+ * at the same moment.
+ */
+export function review(card: StoredCard, grade: Grade4, now: number, rand: () => number = Math.random): StoredCard {
+  const next = fromCard(scheduler.next(toCard(card), new Date(now), RATING[grade]).card);
+  const interval = next.due - now;
+  if (interval >= DAY) {
+    const shift = interval >= 2 * DAY ? (rand() - 0.5) * DAY : rand() * 0.5 * DAY;
+    next.due = Math.round(next.due + shift);
+  }
+  return next;
 }
 
 /** A card treated as already known, due in `dueInDays` (used for imported "studied" words). */

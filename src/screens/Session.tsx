@@ -93,12 +93,15 @@ export function Session({ forceNew }: { forceNew?: number }) {
     setSteps((old) => {
       const s = [...(old ?? [])];
       s.splice(idx + 1, 0, ...immediate);
-      let pos = idx + 1 + immediate.length + 1;
-      for (const l of later) {
-        pos = Math.min(pos, s.length);
+      // Spread the new word's cards over the rest of the session, at least a few cards apart,
+      // so its reading, writing and meaning don't come one after the other.
+      const start = idx + 1 + immediate.length + 2;
+      const room = Math.max(0, s.length - start);
+      const gap = Math.max(4, Math.floor(room / Math.max(1, later.length)));
+      later.forEach((l, k) => {
+        const pos = Math.min(start + k * gap + k, s.length);
         s.splice(pos, 0, l);
-        pos += 2;
-      }
+      });
       return s;
     });
     next();
