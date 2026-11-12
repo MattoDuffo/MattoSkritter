@@ -258,8 +258,9 @@ export function Session({ forceNew }: { forceNew?: number }) {
         <span className="small muted">
           {idx}/{total}
         </span>
-        <button className="icon-btn" disabled={!history.length} onClick={undo} aria-label="Undo last answer" style={{ opacity: history.length ? 1 : 0.35 }}>
+        <button className="undo-btn" disabled={!history.length} onClick={undo} aria-label="Undo last answer">
           <Icon.undo />
+          Undo
         </button>
         <button className="icon-btn" onClick={() => setMenu(true)} aria-label="More">
           <Icon.more />

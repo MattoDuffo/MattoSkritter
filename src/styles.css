@@ -535,6 +535,7 @@ input[type='range'] {
 .session {
   display: flex;
   flex-direction: column;
+  width: 100%;
   min-height: calc(100dvh - env(safe-area-inset-top));
   max-width: 560px;
   margin: 0 auto;
@@ -882,4 +883,40 @@ input[type='range'] {
   padding: 40px 0;
   text-align: center;
   color: var(--text-2);
+}
+
+.undo-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 44px;
+  padding: 0 14px 0 10px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  flex: none;
+}
+.undo-btn svg {
+  width: 24px;
+  height: 24px;
+  stroke-width: 2.4;
+}
+.undo-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.reveal-area.tap-card {
+  flex: 1;
+  cursor: pointer;
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.reveal-area.tap-card:active {
+  background: var(--surface-2);
 }

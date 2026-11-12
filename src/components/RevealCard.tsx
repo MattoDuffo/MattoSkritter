@@ -30,18 +30,27 @@ export function RevealCard({
       <div className="prompt">
         <div className="part-label">{part === 'defn' ? 'What does it mean?' : 'How is it pronounced?'}</div>
       </div>
-      <div className="reveal-area">
+      {/* Only the hanzi at first: tap the card to see pinyin and meaning. */}
+      <div
+        className={`reveal-area ${shown ? '' : 'tap-card'}`}
+        role={shown ? undefined : 'button'}
+        aria-label={shown ? undefined : 'Show answer'}
+        onClick={shown ? undefined : show}
+      >
         <div className="big-han han">{word.simp}</div>
-        {part === 'read' && <div className="def" style={{ fontSize: 17, marginTop: 8 }}>{word.def}</div>}
-        {shown && (
+        {shown ? (
           <div className="answer" style={{ marginTop: 18 }}>
             <div className="pinyin">
               <Pinyin value={word.pinyin} />
             </div>
-            {part === 'defn' && <div className="def">{word.def}</div>}
+            <div className="def">{word.def}</div>
             <button className="icon-btn" style={{ marginTop: 12 }} onClick={() => speak(word.simp)} aria-label="Play audio">
               <Icon.sound />
             </button>
+          </div>
+        ) : (
+          <div className="small muted" style={{ marginTop: 18 }}>
+            Tap to show the {part === 'defn' ? 'meaning' : 'pronunciation'}
           </div>
         )}
       </div>

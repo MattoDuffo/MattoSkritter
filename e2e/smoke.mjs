@@ -132,7 +132,9 @@ for (let n = 0; n < 40; n++) {
     await page.locator('.grades .g3').click();
   } else if (label.startsWith('What does') || label.startsWith('How is')) {
     counts.reveal++;
-    await page.getByRole('button', { name: 'Show answer' }).click();
+    if (counts.reveal === 1) await shot('07a-reveal-before');
+    // tap the card itself (not the button) to reveal
+    await page.locator('.reveal-area.tap-card').click();
     if (counts.reveal === 1) await shot('07-reveal');
     await page.locator('.grades .g3').click();
   } else {
