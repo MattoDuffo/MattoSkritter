@@ -50,7 +50,7 @@ export function ToneCard({
     const ni = idx + 1;
     setTimeout(() => setPath([]), ok ? 250 : 900);
     setIdx(ni);
-    if (ni >= chars.length && settings.autoplayAudio) speak(word.simp);
+    if (ni >= chars.length && settings.autoplayAudio) speak(word.simp, word.pinyin);
   };
 
   const auto: Grade4 = wrong === 0 ? 3 : 1;
@@ -127,7 +127,7 @@ export function ToneCard({
       </div>
       {!finished && (
         <div className="canvas-tools">
-          <button className="icon-btn" onClick={() => speak(word.simp)} aria-label="Play audio">
+          <button className="icon-btn" onClick={() => speak(word.simp, word.pinyin)} aria-label="Play audio">
             <Icon.sound />
           </button>
         </div>

@@ -75,7 +75,7 @@ export function WordPage({ id }: { id: string }) {
           </div>
         )}
         <div className="row" style={{ justifyContent: 'center', marginTop: 10 }}>
-          <button className="icon-btn" onClick={() => speak(id)} aria-label="Play audio">
+          <button className="icon-btn" onClick={() => speak(id, word?.pinyin ?? dict[0]?.pinyin)} aria-label="Play audio">
             <Icon.sound />
           </button>
           <button className="icon-btn" onClick={() => setNonce(nonce + 1)} aria-label="Replay stroke order">

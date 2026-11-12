@@ -23,7 +23,7 @@ export function IntroCard({
   const size = Math.min(160, Math.floor((Math.min(window.innerWidth, 560) - 48) / Math.min(chars.length, 3)));
   const [nonce, setNonce] = useState(0);
   useEffect(() => {
-    if (settings.autoplayAudio) speak(word.simp);
+    if (settings.autoplayAudio) speak(word.simp, word.pinyin);
   }, [word.simp, settings.autoplayAudio]);
   return (
     <>
@@ -47,7 +47,7 @@ export function IntroCard({
           {word.notes && <div className="small muted" style={{ marginTop: 6 }}>{word.notes}</div>}
         </div>
         <div className="row" style={{ justifyContent: 'center', marginTop: 12 }}>
-          <button className="icon-btn" onClick={() => speak(word.simp)} aria-label="Play audio">
+          <button className="icon-btn" onClick={() => speak(word.simp, word.pinyin)} aria-label="Play audio">
             <Icon.sound />
           </button>
           <button className="icon-btn" onClick={() => setNonce(nonce + 1)} aria-label="Replay animation">

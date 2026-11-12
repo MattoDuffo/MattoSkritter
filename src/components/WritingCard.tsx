@@ -63,7 +63,7 @@ export function WritingCard({
       setTimeout(() => setIdx(idx + 1), 650);
     } else {
       setFinished(true);
-      if (settings.autoplayAudio) speak(word.simp);
+      if (settings.autoplayAudio) speak(word.simp, word.pinyin);
       if (mode === 'trace') setTimeout(() => onDone(null, { mistakes: 0 }), 700);
     }
   };
@@ -149,7 +149,7 @@ export function WritingCard({
       </div>
       {!finished && (
         <div className="canvas-tools">
-          <button className="icon-btn" onClick={() => speak(word.simp)} aria-label="Play audio">
+          <button className="icon-btn" onClick={() => speak(word.simp, word.pinyin)} aria-label="Play audio">
             <Icon.sound />
           </button>
           {mode === 'quiz' && (

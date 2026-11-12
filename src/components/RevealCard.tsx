@@ -23,7 +23,7 @@ export function RevealCard({
   const [shown, setShown] = useState(false);
   const show = () => {
     setShown(true);
-    if (settings.autoplayAudio) speak(word.simp);
+    if (settings.autoplayAudio) speak(word.simp, word.pinyin);
   };
   return (
     <>
@@ -44,7 +44,7 @@ export function RevealCard({
               <Pinyin value={word.pinyin} />
             </div>
             <div className="def">{word.def}</div>
-            <button className="icon-btn" style={{ marginTop: 12 }} onClick={() => speak(word.simp)} aria-label="Play audio">
+            <button className="icon-btn" style={{ marginTop: 12 }} onClick={() => speak(word.simp, word.pinyin)} aria-label="Play audio">
               <Icon.sound />
             </button>
           </div>
