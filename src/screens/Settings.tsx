@@ -13,6 +13,12 @@ function stubbornText(v: number) {
   return `${name}: new words slow down as struggling words pile up and stop at about ${t}.`;
 }
 
+function shuffleText(days: number) {
+  if (days <= 0) return 'off (strict due order)';
+  if (days < 1) return `up to ${Math.round(days * 24)} hours`;
+  return `up to ${days} day${days === 1 ? '' : 's'}`;
+}
+
 export function Settings() {
   const [s, update] = useSettings();
   const [persisted, setPersisted] = useState<boolean | null>(null);
@@ -75,6 +81,14 @@ export function Settings() {
           checked={s.charItems}
           onChange={(v) => update({ charItems: v })}
         />
+        <label className="field" style={{ marginTop: 12 }}>
+          <span>Shuffle cards: {shuffleText(s.shuffleDays)}</span>
+          <input type="range" min={0} max={3} step={0.25} value={s.shuffleDays} onChange={(e) => update({ shuffleDays: Number(e.target.value) })} />
+          <div className="small muted">
+            Mixes up the order of due cards and spreads review dates by up to this much, so a word's reading, writing and meaning cards don't
+            keep coming together.
+          </div>
+        </label>
         <Toggle label="Auto-advance after “Got it”" sub="Moves on after about 1 second" checked={s.autoAdvance} onChange={(v) => update({ autoAdvance: v })} />
         <Toggle label="Play audio automatically" checked={s.autoplayAudio} onChange={(v) => update({ autoplayAudio: v })} />
       </div>

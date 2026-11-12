@@ -38,15 +38,23 @@ export function newCard(now: number): StoredCard {
 const RATING: Record<Grade4, Grade> = { 1: Rating.Again, 2: Rating.Hard, 3: Rating.Good, 4: Rating.Easy };
 
 /**
- * Schedule the next review. Intervals of a day or more get up to a day of random shift, so the
- * different parts of a word (and words learned together) drift apart instead of always coming due
- * at the same moment.
+ * Schedule the next review. Intervals of a day or more get a random shift spanning up to
+ * `shuffleDays` (setting, default 1 day), so the different parts of a word (and words learned
+ * together) drift apart instead of always coming due at the same moment. The shift never moves a
+ * card by more than half its interval.
  */
-export function review(card: StoredCard, grade: Grade4, now: number, rand: () => number = Math.random): StoredCard {
+export function review(
+  card: StoredCard,
+  grade: Grade4,
+  now: number,
+  shuffleDays = 1,
+  rand: () => number = Math.random,
+): StoredCard {
   const next = fromCard(scheduler.next(toCard(card), new Date(now), RATING[grade]).card);
   const interval = next.due - now;
-  if (interval >= DAY) {
-    const shift = interval >= 2 * DAY ? (rand() - 0.5) * DAY : rand() * 0.5 * DAY;
+  if (interval >= DAY && shuffleDays > 0) {
+    const limit = interval / 2;
+    const shift = Math.max(-limit, Math.min(limit, (rand() - 0.5) * shuffleDays * DAY));
     next.due = Math.round(next.due + shift);
   }
   return next;

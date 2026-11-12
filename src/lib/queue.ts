@@ -114,8 +114,6 @@ export function spreadByWord<T extends { wordId: string; family?: string }>(step
   return out;
 }
 
-/** Up to a day of randomness in the order of due cards (so the same cards don't always come together). */
-export const ORDER_JITTER_MS = 86_400_000;
 
 /**
  * Build a session: overdue reviews first (most overdue relative to interval), plus up to the
@@ -131,7 +129,8 @@ export async function buildSession(
 
   // Cards created but never answered (e.g. a session was left early) come back first.
   const unseen = items.filter((i) => i.card.state === 0);
-  const jitter = new Map(items.map((i) => [i.id, Math.random() * ORDER_JITTER_MS]));
+  // Randomness in the order of due cards (setting, default up to a day) so the same cards don't always come together.
+  const jitter = new Map(items.map((i) => [i.id, Math.random() * s.shuffleDays * 86_400_000]));
   const due = items
     .filter((i) => i.card.state !== 0 && i.dueAt <= now)
     .sort((a, b) => a.dueAt + jitter.get(a.id)! - (b.dueAt + jitter.get(b.id)!));

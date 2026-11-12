@@ -17,6 +17,8 @@ export interface Settings {
   drawAfterMisses: number;
   dailyGoalMinutes: number;
   dayStartHour: number;
+  /** randomness in card order and due times, in days (0 = strict order) */
+  shuffleDays: number;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -35,6 +37,7 @@ export const DEFAULT_SETTINGS: Settings = {
   drawAfterMisses: 3,
   dailyGoalMinutes: 15,
   dayStartHour: 4,
+  shuffleDays: 1,
 };
 
 let cache: Settings | null = null;

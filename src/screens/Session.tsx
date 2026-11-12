@@ -115,7 +115,7 @@ export function Session({ forceNew }: { forceNew?: number }) {
     if (g === null) return next();
     const now = Date.now();
     const ms = Math.min(now - started.current, 90_000);
-    const card = review(item.card, g, now);
+    const card = review(item.card, g, now, settings!.shuffleDays);
     await db.items.put({ ...item, card, dueAt: card.due });
     const reviewId = await db.reviews.add({
       itemId: item.id,
