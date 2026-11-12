@@ -7,6 +7,7 @@ import { studyStatus, type StudyStatus } from '../lib/queue';
 import { dayStart, getKV, useSettings } from '../lib/settings';
 import { computeStats, type Stats } from '../lib/stats';
 import { go } from '../router';
+import { versionLabel } from '../version';
 
 const WEEK = 7 * 86_400_000;
 
@@ -150,6 +151,9 @@ export function Home() {
       )}
       <p className="small muted center" style={{ marginTop: 16 }}>
         Day starts at {s.dayStartHour}:00 · {new Date(dayStart(Date.now(), s.dayStartHour)).toLocaleDateString()}
+      </p>
+      <p className="small muted center" style={{ marginTop: 4, fontSize: 11, opacity: 0.8 }}>
+        {versionLabel()}
       </p>
     </div>
   );

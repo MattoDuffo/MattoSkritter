@@ -1,6 +1,21 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
+import { execSync } from 'node:child_process';
+
+// Version shown on the home screen: build number (GitHub Actions run number), commit and build time.
+function gitSha() {
+  try {
+    return execSync('git rev-parse --short HEAD').toString().trim();
+  } catch {
+    return 'local';
+  }
+}
+const APP_VERSION = {
+  build: process.env.GITHUB_RUN_NUMBER ?? 'dev',
+  sha: (process.env.GITHUB_SHA ?? gitSha()).slice(0, 7),
+  date: new Date().toISOString(),
+};
 
 // base './' keeps the app working under any path (e.g. GitHub Pages /MattoSkritter/,
 // and PR previews under /MattoSkritter/pr-preview/pr-N/).
@@ -8,6 +23,9 @@ import { VitePWA } from 'vite-plugin-pwa';
 // cache themselves or interfere with the installed app.
 export default defineConfig(({ mode }) => ({
   base: './',
+  define: {
+    __APP_VERSION__: JSON.stringify(APP_VERSION),
+  },
   plugins: [
     react(),
     VitePWA({
