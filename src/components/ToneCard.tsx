@@ -15,17 +15,20 @@ export function ToneCard({
   card,
   settings,
   onDone,
+  restored,
 }: {
   word: Word;
   card?: StoredCard;
   settings: Settings;
-  onDone: (grade: Grade4, info: { mistakes: number }) => void;
+  onDone: (grade: Grade4, info: { mistakes: number; answers: (number | null)[] }) => void;
+  /** coming back with Undo: show the card completed, with the grade that was given */
+  restored?: { grade: Grade4; answers: (number | null)[] };
 }) {
   const chars = hanChars(word.simp);
   const syl = syllables(word.pinyin);
   const size = Math.min(useCanvasSize(380, 400), 340);
-  const [idx, setIdx] = useState(0);
-  const [answers, setAnswers] = useState<(number | null)[]>(chars.map(() => null));
+  const [idx, setIdx] = useState(restored ? chars.length : 0);
+  const [answers, setAnswers] = useState<(number | null)[]>(restored?.answers ?? chars.map(() => null));
   const [path, setPath] = useState<Pt[]>([]);
   const [feedback, setFeedback] = useState<{ ok: boolean; text: string } | null>(null);
   const drawing = useRef<Pt[] | null>(null);
@@ -53,7 +56,7 @@ export function ToneCard({
     if (ni >= chars.length && settings.autoplayAudio) speak(word.simp, word.pinyin);
   };
 
-  const auto: Grade4 = wrong === 0 ? 3 : 1;
+  const auto: Grade4 = restored ? restored.grade : wrong === 0 ? 3 : 1;
 
   return (
     <>
@@ -132,7 +135,7 @@ export function ToneCard({
           </button>
         </div>
       )}
-      {finished && <GradeBar card={card} auto={auto} autoAdvance={settings.autoAdvance} onGrade={(g) => onDone(g, { mistakes: wrong })} />}
+      {finished && <GradeBar card={card} auto={auto} autoAdvance={settings.autoAdvance && !restored} onGrade={(g) => onDone(g, { mistakes: wrong, answers })} />}
     </>
   );
 }

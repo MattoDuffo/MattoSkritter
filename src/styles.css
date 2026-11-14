@@ -920,3 +920,14 @@ input[type='range'] {
 .reveal-area.tap-card:active {
   background: var(--surface-2);
 }
+
+.next-char-hint {
+  display: block;
+  margin: 12px auto 0;
+  border: 0;
+  background: none;
+  color: var(--text-2);
+  font-size: 14px;
+  padding: 10px 12px;
+  cursor: pointer;
+}

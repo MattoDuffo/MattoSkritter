@@ -71,7 +71,8 @@ export function Seg<T extends string>({ value, options, onChange }: { value: T; 
 
 /**
  * The four grade buttons. `auto` is highlighted; with `autoAdvance` a "Got it" auto-grade
- * is accepted after ~1 s unless the user taps something else.
+ * is accepted after ~1 s unless the user taps something else. When the user picks a different
+ * grade than the highlighted one, their choice is shown for half a second before moving on.
  */
 export function GradeBar({
   card,
@@ -87,22 +88,27 @@ export function GradeBar({
   const [now] = useState(() => Date.now());
   const intervals = card ? previewIntervals(card, now) : null;
   const done = useRef(false);
-  const fire = (g: Grade4) => {
+  const [chosen, setChosen] = useState<Grade4 | null>(null);
+  const fire = (g: Grade4, byUser: boolean) => {
     if (done.current) return;
     done.current = true;
-    onGrade(g);
+    if (byUser && g !== auto) {
+      setChosen(g);
+      setTimeout(() => onGrade(g), 500);
+    } else onGrade(g);
   };
   useEffect(() => {
     if (autoAdvance && auto === 3) {
-      const t = setTimeout(() => fire(3), 1000);
+      const t = setTimeout(() => fire(3, false), 1000);
       return () => clearTimeout(t);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [auto, autoAdvance]);
+  const highlighted = chosen ?? auto;
   return (
-    <div className={`grades ${auto ? '' : 'none-auto'}`}>
+    <div className={`grades ${highlighted ? '' : 'none-auto'}`}>
       {([1, 2, 3, 4] as Grade4[]).map((g) => (
-        <button key={g} className={`g${g} ${auto === g ? 'auto' : ''}`} onClick={() => fire(g)}>
+        <button key={g} className={`g${g} ${highlighted === g ? 'auto' : ''}`} onClick={() => fire(g, true)}>
           {GRADE_LABEL[g]}
           {intervals && <small>{intervals[g]}</small>}
         </button>

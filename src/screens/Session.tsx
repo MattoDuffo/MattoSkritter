@@ -3,7 +3,7 @@ import { IntroCard } from '../components/IntroCard';
 import { Icon } from '../components/icons';
 import { RevealCard } from '../components/RevealCard';
 import { ToneCard } from '../components/ToneCard';
-import { WritingCard } from '../components/WritingCard';
+import { WritingCard, type CharResult } from '../components/WritingCard';
 import { Sheet, useToast } from '../components/common';
 import { db, PART_LABEL, type Item, type StoredCard, type Word } from '../lib/db';
 import { buildSession, stepsAfterIntro, type Step } from '../lib/queue';
@@ -18,6 +18,14 @@ interface HistoryEntry {
   prevCard: StoredCard;
   reviewId: number;
   insertedRetryAt: number | null;
+  grade: Grade4;
+  snapshot: Snapshot;
+}
+
+/** What a card looked like when it was answered, so Undo can show it completed again. */
+interface Snapshot {
+  results?: CharResult[];
+  answers?: (number | null)[];
 }
 
 export function Session({ forceNew }: { forceNew?: number }) {
@@ -31,6 +39,15 @@ export function Session({ forceNew }: { forceNew?: number }) {
   const [editing, setEditing] = useState<{ pinyin: string; def: string } | null>(null);
   const [results, setResults] = useState<{ grade: Grade4; ms: number }[]>([]);
   const [cardKey, setCardKey] = useState(0);
+  // set by Undo: the card we went back to is shown completed, with its grade
+  const [restored, setRestored] = useState<{ idx: number; grade: Grade4; snapshot: Snapshot } | null>(null);
+  // the writing card can step back one character inside the word
+  const cardBack = useRef<(() => boolean) | null>(null);
+  const [cardCanBack, setCardCanBack] = useState(false);
+  const registerBack = useCallback((fn: (() => boolean) | null, can: boolean) => {
+    cardBack.current = fn;
+    setCardCanBack(!!fn && can);
+  }, []);
   const started = useRef(Date.now());
   const [toast, showToast] = useToast();
 
@@ -74,7 +91,10 @@ export function Session({ forceNew }: { forceNew?: number }) {
     };
   }, [step]);
 
-  const next = () => setIdx((i) => i + 1);
+  const next = () => {
+    setRestored(null);
+    setIdx((i) => i + 1);
+  };
 
   const introduce = async (known: boolean) => {
     if (!step || step.kind !== 'intro' || !settings) return;
@@ -107,7 +127,8 @@ export function Session({ forceNew }: { forceNew?: number }) {
     next();
   };
 
-  const grade = async (g: Grade4 | null, info: { mistakes?: number } = {}) => {
+  const grade = async (g: Grade4 | null, info: { mistakes?: number } & Snapshot = {}) => {
+    setRestored(null);
     if (!step || step.kind !== 'review' || !item) {
       next();
       return;
@@ -138,12 +159,18 @@ export function Session({ forceNew }: { forceNew?: number }) {
         return s;
       });
     }
-    setHistory((h) => [...h, { idx, itemId: item.id, prevCard: item.card, reviewId, insertedRetryAt }]);
+    const snapshot: Snapshot = { results: info.results, answers: info.answers };
+    setHistory((h) => [...h, { idx, itemId: item.id, prevCard: item.card, reviewId, insertedRetryAt, grade: g, snapshot }]);
     setResults((r) => [...r, { grade: g, ms }]);
     next();
   };
 
+  /**
+   * Undo / back: inside a multi-character word, go back one character; otherwise go back to the
+   * previous card, shown completed with the grade it got (tap a grade to keep or change it).
+   */
   const undo = async () => {
+    if (cardBack.current?.()) return;
     const last = history[history.length - 1];
     if (!last) return;
     const it = await db.items.get(last.itemId);
@@ -158,9 +185,11 @@ export function Session({ forceNew }: { forceNew?: number }) {
     }
     setHistory((h) => h.slice(0, -1));
     setResults((r) => r.slice(0, -1));
+    setRestored({ idx: last.idx, grade: last.grade, snapshot: last.snapshot });
     setIdx(last.idx);
     setCardKey((k) => k + 1);
   };
+  const rest = restored && restored.idx === idx ? restored : null;
 
   const skipWord = (wordId: string) => setSteps((old) => (old ?? []).filter((s, i) => i <= idx || s.wordId !== wordId));
 
@@ -261,7 +290,7 @@ export function Session({ forceNew }: { forceNew?: number }) {
         <span className="small muted">
           {idx}/{total}
         </span>
-        <button className="undo-btn" disabled={!history.length} onClick={undo} aria-label="Undo last answer">
+        <button className="undo-btn" disabled={!history.length && !cardCanBack} onClick={undo} aria-label="Undo / back">
           <Icon.undo />
           Undo
         </button>
@@ -273,16 +302,42 @@ export function Session({ forceNew }: { forceNew?: number }) {
         <IntroCard key={cardKey} word={word} settings={settings} onStart={() => introduce(false)} onKnown={() => introduce(true)} />
       )}
       {step && word && step.kind === 'trace' && (
-        <WritingCard key={cardKey} word={word} settings={settings} mode="trace" onDone={() => next()} />
+        <WritingCard key={cardKey} word={word} settings={settings} mode="trace" onDone={() => next()} registerBack={registerBack} />
       )}
       {step && word && item && step.kind === 'review' && (
         <>
           {item.part === 'write' && (
-            <WritingCard key={cardKey} word={word} card={item.card} settings={settings} mode="quiz" onDone={(g, i) => grade(g, i)} />
+            <WritingCard
+              key={cardKey}
+              word={word}
+              card={item.card}
+              settings={settings}
+              mode="quiz"
+              onDone={(g, i) => grade(g, i)}
+              registerBack={registerBack}
+              restored={rest && rest.snapshot.results ? { grade: rest.grade, results: rest.snapshot.results } : undefined}
+            />
           )}
-          {item.part === 'tone' && <ToneCard key={cardKey} word={word} card={item.card} settings={settings} onDone={(g, i) => grade(g, i)} />}
+          {item.part === 'tone' && (
+            <ToneCard
+              key={cardKey}
+              word={word}
+              card={item.card}
+              settings={settings}
+              onDone={(g, i) => grade(g, i)}
+              restored={rest && rest.snapshot.answers ? { grade: rest.grade, answers: rest.snapshot.answers } : undefined}
+            />
+          )}
           {(item.part === 'defn' || item.part === 'read') && (
-            <RevealCard key={cardKey} word={word} card={item.card} part={item.part} settings={settings} onDone={(g) => grade(g)} />
+            <RevealCard
+              key={cardKey}
+              word={word}
+              card={item.card}
+              part={item.part}
+              settings={settings}
+              onDone={(g) => grade(g)}
+              restored={rest ? { grade: rest.grade } : undefined}
+            />
           )}
         </>
       )}

@@ -13,14 +13,17 @@ export function RevealCard({
   part,
   settings,
   onDone,
+  restored,
 }: {
   word: Word;
   card?: StoredCard;
   part: 'defn' | 'read';
   settings: Settings;
   onDone: (grade: Grade4) => void;
+  /** coming back with Undo: answer shown, with the grade that was given */
+  restored?: { grade: Grade4 };
 }) {
-  const [shown, setShown] = useState(false);
+  const [shown, setShown] = useState(!!restored);
   const show = () => {
     setShown(true);
     if (settings.autoplayAudio) speak(word.simp, word.pinyin);
@@ -61,7 +64,7 @@ export function RevealCard({
           </button>
         </div>
       ) : (
-        <GradeBar card={card} onGrade={onDone} />
+        <GradeBar card={card} auto={restored?.grade} onGrade={onDone} />
       )}
     </>
   );

@@ -9,7 +9,7 @@ import { GradeBar, Pinyin, useCanvasSize } from './common';
 import { Icon } from './icons';
 import { Grid, restartWriterQuiz, revealWriterChar, Writer } from './Writer';
 
-interface CharResult {
+export interface CharResult {
   mistakes: number;
   drawn: number; // strokes drawn for you
   hinted: boolean;
@@ -29,18 +29,28 @@ export function WritingCard({
   settings,
   mode,
   onDone,
+  restored,
+  registerBack,
 }: {
   word: Word;
   card?: StoredCard;
   settings: Settings;
   mode: 'quiz' | 'trace';
-  onDone: (grade: Grade4 | null, info: { mistakes: number }) => void;
+  onDone: (grade: Grade4 | null, info: { mistakes: number; results: CharResult[] }) => void;
+  /** coming back with Undo: show the card completed, with the grade that was given */
+  restored?: { grade: Grade4; results: CharResult[] };
+  /** lets the session's Undo step back one character inside this word */
+  registerBack?: (back: (() => boolean) | null, canBack: boolean) => void;
 }) {
   const chars = hanChars(word.simp);
   const size = useCanvasSize(420, 340);
-  const [idx, setIdx] = useState(0);
-  const [results, setResults] = useState<CharResult[]>([]);
-  const [finished, setFinished] = useState(false);
+  const [idx, setIdx] = useState(restored ? chars.length - 1 : 0);
+  const [results, setResults] = useState<CharResult[]>(restored?.results ?? []);
+  const [finished, setFinished] = useState(!!restored);
+  const [restoredView, setRestoredView] = useState(!!restored);
+  // a character is done and more follow: wait for a tap instead of moving on by itself
+  const [awaitNext, setAwaitNext] = useState(false);
+  const awaitSince = useRef(0);
   const [nonce, setNonce] = useState(0);
   const [showOutline, setShowOutline] = useState(false);
   const [error, setError] = useState(false);
@@ -48,11 +58,12 @@ export function WritingCard({
   const cur = useRef<CharResult>({ mistakes: 0, drawn: 0, hinted: false, revealed: false });
   const stroke = useRef(0);
 
-  useEffect(() => {
+  const resetChar = () => {
     cur.current = { mistakes: 0, drawn: 0, hinted: false, revealed: false };
     stroke.current = 0;
     setShowOutline(false);
-  }, [idx]);
+  };
+  useEffect(resetChar, [idx]);
 
   const finishChar = () => {
     const r = { ...cur.current };
@@ -60,13 +71,56 @@ export function WritingCard({
     next[idx] = r;
     setResults(next);
     if (idx + 1 < chars.length) {
-      setTimeout(() => setIdx(idx + 1), 650);
+      awaitSince.current = Date.now();
+      setAwaitNext(true);
     } else {
       setFinished(true);
       if (settings.autoplayAudio) speak(word.simp, word.pinyin);
-      if (mode === 'trace') setTimeout(() => onDone(null, { mistakes: 0 }), 700);
+      if (mode === 'trace') setTimeout(() => onDone(null, { mistakes: 0, results: next }), 700);
     }
   };
+
+  const goNextChar = (fromCanvas = false) => {
+    if (!awaitNext) return;
+    // lifting the finger at the end of the last stroke must not count as the tap
+    if (fromCanvas && Date.now() - awaitSince.current < 450) return;
+    setAwaitNext(false);
+    setIdx(idx + 1);
+  };
+
+  // Undo inside the word: back to the previous character (or reopen the one just finished).
+  const canBack = finished ? chars.length > 1 && mode === 'quiz' : awaitNext || idx > 0;
+  const back = (): boolean => {
+    if (finished) {
+      if (chars.length < 2 || mode !== 'quiz') return false;
+      setResults(results.slice(0, idx));
+      setFinished(false);
+      setRestoredView(false);
+      resetChar();
+      setNonce((n) => n + 1);
+      return true;
+    }
+    if (awaitNext) {
+      setResults(results.slice(0, idx));
+      setAwaitNext(false);
+      resetChar();
+      setNonce((n) => n + 1);
+      return true;
+    }
+    if (idx > 0) {
+      setResults(results.slice(0, idx - 1));
+      setIdx(idx - 1);
+      setNonce((n) => n + 1);
+      return true;
+    }
+    return false;
+  };
+  const backRef = useRef(back);
+  backRef.current = back;
+  useEffect(() => {
+    registerBack?.(() => backRef.current(), canBack);
+  }, [registerBack, canBack]);
+  useEffect(() => () => registerBack?.(null, false), [registerBack]);
 
   const hint = () => {
     const w = writerRef.current;
@@ -86,13 +140,14 @@ export function WritingCard({
   };
 
   const total = results.reduce((n, r) => n + (r?.mistakes ?? 0), 0);
-  const auto: Grade4 | undefined = finished && mode === 'quiz' ? (Math.min(...results.map(gradeChar)) as Grade4) : undefined;
+  const auto: Grade4 | undefined =
+    finished && mode === 'quiz' ? (restoredView && restored ? restored.grade : (Math.min(...results.map(gradeChar)) as Grade4)) : undefined;
 
   if (error) {
     return (
       <div className="reveal-area">
         <p className="muted">No stroke data for {chars[idx]}. Skipping writing for this word.</p>
-        <button className="btn primary" onClick={() => onDone(mode === 'quiz' ? 3 : null, { mistakes: 0 })}>
+        <button className="btn primary" onClick={() => onDone(mode === 'quiz' ? 3 : null, { mistakes: 0, results: [] })}>
           Continue
         </button>
       </div>
@@ -113,19 +168,19 @@ export function WritingCard({
           const r = results[i];
           const g = r ? gradeChar(r) : 0;
           return (
-            <span key={i} className={`slot ${i === idx && !finished ? 'current' : ''} ${r ? 'g' + g : ''}`}>
+            <span key={i} className={`slot ${i === idx && !finished && !awaitNext ? 'current' : ''} ${r ? 'g' + g : ''}`}>
               {r || (finished && i <= idx) ? c : ''}
             </span>
           );
         })}
       </div>
-      <div className="canvas-wrap" style={{ width: size, height: size }}>
+      <div className="canvas-wrap" style={{ width: size, height: size }} onClick={awaitNext ? () => goNextChar(true) : undefined}>
         <Grid size={size} kind={settings.grid} />
         <Writer
           key={`${idx}-${nonce}`}
           char={chars[idx]}
           size={size}
-          mode={mode === 'trace' || showOutline ? 'trace' : 'quiz'}
+          mode={restoredView ? 'show' : mode === 'trace' || showOutline ? 'trace' : 'quiz'}
           leniency={settings.leniency}
           hintAfterMisses={settings.hintAfterMisses}
           drawAfterMisses={settings.drawAfterMisses}
@@ -147,7 +202,12 @@ export function WritingCard({
           }}
         />
       </div>
-      {!finished && (
+      {awaitNext && (
+        <button className="next-char-hint" onClick={() => goNextChar()}>
+          Tap to move to the next character ›
+        </button>
+      )}
+      {!finished && !awaitNext && (
         <div className="canvas-tools">
           <button className="icon-btn" onClick={() => speak(word.simp, word.pinyin)} aria-label="Play audio">
             <Icon.sound />
@@ -193,7 +253,13 @@ export function WritingCard({
             {results.some((r) => r.drawn) ? ' · strokes drawn for you' : ''}
             {results.some((r) => r.revealed) ? ' · revealed' : ''}
           </div>
-          <GradeBar card={card} auto={auto} autoAdvance={settings.autoAdvance} onGrade={(g) => onDone(g, { mistakes: total })} />
+          <GradeBar
+            key={restoredView ? 'restored' : 'live'}
+            card={card}
+            auto={auto}
+            autoAdvance={settings.autoAdvance && !restoredView}
+            onGrade={(g) => onDone(g, { mistakes: total, results })}
+          />
         </>
       )}
       {finished && mode === 'trace' && <div className="feedback ok">Nice — now you'll write it from memory later.</div>}

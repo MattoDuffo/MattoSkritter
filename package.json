@@ -11,7 +11,8 @@
     "test": "vitest run",
     "typecheck": "tsc -b",
     "e2e": "node e2e/smoke.mjs",
-    "icons": "node scripts/make-icons.mjs"
+    "icons": "node scripts/make-icons.mjs",
+    "e2e:undo": "node e2e/undo.mjs"
   },
   "dependencies": {
     "dexie": "^4.4.7",

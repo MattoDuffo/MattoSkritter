@@ -18,6 +18,11 @@ const log = (...a) => console.log('•', ...a);
 process.on('unhandledRejection', async (e) => { console.error(e); try { await shot('99-failure'); } catch {} process.exit(1); });
 
 async function drawChar(charEl) {
+  // between characters of a word the app waits for a tap
+  if (await page.locator('.next-char-hint').isVisible().catch(() => false)) {
+    await page.locator('.next-char-hint').click();
+    await page.waitForTimeout(300);
+  }
   const char = await charEl.getAttribute('data-char');
   const box = await charEl.boundingBox();
   const size = box.width;
@@ -109,6 +114,7 @@ for (let n = 0; n < 40; n++) {
       await shot('05b-writing-wrong');
       log('wrong-strokes card auto-grade:', await page.locator('.grades button.auto').textContent(), '|', await page.locator('.feedback').first().textContent());
       await page.locator('.grades button.auto').click();
+      await page.waitForTimeout(300);
       continue;
     }
     for (let guard = 0; guard < 6 && !(await page.locator('.grades').isVisible()); guard++) {
@@ -123,6 +129,7 @@ for (let n = 0; n < 40; n++) {
     if (counts.write === 1) log('first writing card auto-grade:', auto);
     await page.waitForTimeout(1300); // auto-advance on Got it
     if (await page.locator('.grades').isVisible()) await page.locator('.grades button.auto, .grades .g3').first().click();
+    await page.waitForTimeout(700);
   } else if (label === 'Tone') {
     counts.tone++;
     // read the correct tones from the database via the word page data is hard; draw tone 4, then accept
@@ -130,6 +137,7 @@ for (let n = 0; n < 40; n++) {
     for (let i = 0; i < syl; i++) await drawTone(4);
     if (counts.tone === 1) await shot('06-tone');
     await page.locator('.grades .g3').click();
+    await page.waitForTimeout(700); // a changed grade is shown for 0.5 s
   } else if (label.startsWith('What does') || label.startsWith('How is')) {
     counts.reveal++;
     if (counts.reveal === 1) await shot('07a-reveal-before');
@@ -137,6 +145,7 @@ for (let n = 0; n < 40; n++) {
     await page.locator('.reveal-area.tap-card').click();
     if (counts.reveal === 1) await shot('07-reveal');
     await page.locator('.grades .g3').click();
+    await page.waitForTimeout(700); // a changed grade is shown for 0.5 s
   } else {
     await shot('99-unknown');
     throw new Error('Unknown card: ' + label);
