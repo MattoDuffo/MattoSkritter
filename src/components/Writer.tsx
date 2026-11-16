@@ -129,7 +129,6 @@ export function Writer({
       writer.quiz({
         leniency,
         showHintAfterMisses: mode === 'trace' ? 1 : hintAfterMisses,
-        acceptBackwardsStrokes: true,
         highlightOnComplete: true,
         onMistake: (d) => {
           const forced = mode === 'quiz' && d.mistakesOnStroke >= drawAfterMisses;
