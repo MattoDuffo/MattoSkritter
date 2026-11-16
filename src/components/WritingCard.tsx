@@ -219,11 +219,12 @@ export function WritingCard({
             <>
               <button
                 className={`icon-btn ${showOutline ? 'on' : ''}`}
-                aria-label="Show outline"
+                aria-label={showOutline ? 'Hide outline' : 'Show outline'}
+                aria-pressed={showOutline}
                 onClick={() => {
                   cur.current.hinted = true;
                   stroke.current = 0;
-                  setShowOutline(true);
+                  setShowOutline(!showOutline);
                   setNonce(nonce + 1);
                 }}
               >
