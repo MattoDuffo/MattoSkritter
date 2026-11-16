@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Icon } from '../components/icons';
-import { TopBar } from '../components/common';
 import { db } from '../lib/db';
 import { lastBackupAt, saveBackupFile } from '../lib/backup';
 import { studyStatus, type StudyStatus } from '../lib/queue';
 import { dayStart, getKV, useSettings } from '../lib/settings';
 import { computeStats, type Stats } from '../lib/stats';
 import { go } from '../router';
+import { installBuiltinLists } from '../lib/builtin';
+import { TopBar, useToast } from '../components/common';
 import { versionLabel } from '../version';
 
 const WEEK = 7 * 86_400_000;
@@ -16,12 +17,22 @@ export function Home() {
   const [status, setStatus] = useState<StudyStatus | null>(null);
   const [stats, setStats] = useState<Stats | null>(null);
   const [backupDue, setBackupDue] = useState(false);
+  const [refresh, setRefresh] = useState(0);
+  const [toast, showToast] = useToast();
 
   useEffect(() => {
     (async () => {
       const lists = await db.lists.count();
       const onboarded = await getKV('onboarded', false);
       if (!lists && !onboarded) go({ name: 'welcome' }, true);
+      else {
+        // built-in lists (HSK 1, HSK 2) are added once
+        const added = await installBuiltinLists();
+        if (added.length) {
+          showToast(`Added list${added.length > 1 ? 's' : ''}: ${added.join(', ')}`);
+          setRefresh((n) => n + 1);
+        }
+      }
     })();
   }, []);
 
@@ -34,7 +45,7 @@ export function Home() {
       const anyReviews = (await db.reviews.count()) > 0;
       setBackupDue(anyReviews && (!last || Date.now() - last > WEEK));
     })();
-  }, [s]);
+  }, [s, refresh]);
 
   if (!s || !status) return <div className="loading">Loading…</div>;
 
@@ -155,6 +166,7 @@ export function Home() {
       <p className="small muted center" style={{ marginTop: 4, fontSize: 11, opacity: 0.8 }}>
         {versionLabel()}
       </p>
+      {toast}
     </div>
   );
 }
