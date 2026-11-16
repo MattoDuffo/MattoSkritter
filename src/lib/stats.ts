@@ -1,4 +1,4 @@
-import { db, PARTS, type Part } from './db';
+import { db, PARTS, type Item, type Part } from './db';
 import { dayKey, dayStart, type Settings } from './settings';
 
 export interface Stats {
@@ -16,6 +16,18 @@ export interface Stats {
 }
 
 const DAY = 86_400_000;
+
+/** Words with study items of their own (not just as a character inside another word). */
+export function studiedWordIds(items: Item[]): Set<string> {
+  return new Set(items.filter((i) => !i.charOf).map((i) => i.wordId));
+}
+
+/** Every character you write as part of a studied item. */
+export function studiedCharSet(items: Item[]): Set<string> {
+  const out = new Set<string>();
+  for (const i of items) if (i.part === 'write') for (const c of i.wordId) out.add(c);
+  return out;
+}
 
 export async function computeStats(s: Settings, now = Date.now()): Promise<Stats> {
   const reviews = await db.reviews.toArray();
@@ -61,9 +73,8 @@ export async function computeStats(s: Settings, now = Date.now()): Promise<Stats
     heatmap.push({ key: k, count: byDay.get(k) ?? 0 });
   }
 
-  const studiedWords = new Set(items.filter((i) => !i.charOf).map((i) => i.wordId));
-  const studiedChars = new Set<string>();
-  for (const i of items) if (i.part === 'write') for (const c of i.wordId) studiedChars.add(c);
+  const studiedWords = studiedWordIds(items);
+  const studiedChars = studiedCharSet(items);
   const bannedWords = new Set(items.filter((i) => i.banned).map((i) => i.wordId)).size;
 
   const { pendingNewWords } = await import('./queue');

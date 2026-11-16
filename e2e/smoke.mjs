@@ -171,6 +171,15 @@ await page.waitForTimeout(1500);
 log('search dumpling first result:', await page.locator('.list-item .han').first().textContent());
 
 // Stats + settings + dark mode
+// home stat tiles open their word / character lists
+for (const [label, shotName] of [['words studied', '08b-studied'], ['characters', '08c-chars'], ['new words left', '08d-new']]) {
+  await page.goto(base + '#/');
+  await page.locator('button.stat', { hasText: label }).click();
+  await page.waitForSelector('.list .list-item');
+  await page.waitForTimeout(600);
+  log(`${label} list:`, await page.locator('.topbar h1').textContent(), '|', await page.locator('.list-item').count(), 'rows, first', await page.locator('.list-item .han').first().textContent());
+  await shot(shotName);
+}
 await page.goto(base + '#/stats');
 await page.waitForTimeout(800);
 await shot('09-stats');

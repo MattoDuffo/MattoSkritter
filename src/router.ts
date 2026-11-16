@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react';
 
+export type CollectionKind = 'studied' | 'chars' | 'new';
+const KINDS: CollectionKind[] = ['studied', 'chars', 'new'];
+
 export type Route =
   | { name: 'home' }
   | { name: 'session'; forceNew?: number }
@@ -9,6 +12,7 @@ export type Route =
   | { name: 'add'; word?: string; listId?: number }
   | { name: 'search'; q?: string }
   | { name: 'stats' }
+  | { name: 'collection'; kind: CollectionKind }
   | { name: 'settings' }
   | { name: 'welcome' };
 
@@ -31,6 +35,8 @@ export function parseHash(hash: string): Route {
       return { name: 'search', q: params.get('q') ?? undefined };
     case 'stats':
       return { name: 'stats' };
+    case 'collection':
+      return KINDS.includes(b as CollectionKind) ? { name: 'collection', kind: b as CollectionKind } : { name: 'home' };
     case 'settings':
       return { name: 'settings' };
     case 'welcome':
@@ -57,6 +63,8 @@ export function href(r: Route): string {
       const s = p.toString();
       return `#/add${s ? '?' + s : ''}`;
     }
+    case 'collection':
+      return `#/collection/${r.kind}`;
     case 'search':
       return r.q ? `#/search?q=${encodeURIComponent(r.q)}` : '#/search';
     default:

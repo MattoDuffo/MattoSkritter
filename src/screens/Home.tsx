@@ -135,18 +135,18 @@ export function Home() {
 
       {stats && (
         <div className="stat-row" style={{ marginTop: 16 }}>
-          <div className="stat">
+          <button className="stat" onClick={() => go({ name: 'collection', kind: 'studied' })}>
             <b>{stats.wordsStudied}</b>
             <span>words studied</span>
-          </div>
-          <div className="stat">
+          </button>
+          <button className="stat" onClick={() => go({ name: 'collection', kind: 'chars' })}>
             <b>{stats.charsStudied}</b>
             <span>characters</span>
-          </div>
-          <div className="stat">
+          </button>
+          <button className="stat" onClick={() => go({ name: 'collection', kind: 'new' })}>
             <b>{stats.pendingNew}</b>
             <span>new words left</span>
-          </div>
+          </button>
         </div>
       )}
       <p className="small muted center" style={{ marginTop: 16 }}>

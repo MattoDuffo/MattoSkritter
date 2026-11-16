@@ -3,6 +3,7 @@ import { Icon } from './components/icons';
 import { useSettings } from './lib/settings';
 import { go, useRoute, type Route } from './router';
 import { AddWord } from './screens/AddWord';
+import { Collection } from './screens/Collection';
 import { Home } from './screens/Home';
 import { ListDetail, Lists } from './screens/Lists';
 import { Search } from './screens/Search';
@@ -13,7 +14,7 @@ import { Welcome } from './screens/Welcome';
 import { WordPage } from './screens/WordPage';
 
 const TABS: { route: Route; label: string; icon: () => JSX.Element; match: Route['name'][] }[] = [
-  { route: { name: 'home' }, label: 'Study', icon: Icon.study, match: ['home'] },
+  { route: { name: 'home' }, label: 'Study', icon: Icon.study, match: ['home', 'collection'] },
   { route: { name: 'lists' }, label: 'Lists', icon: Icon.lists, match: ['lists', 'list'] },
   { route: { name: 'search' }, label: 'Dictionary', icon: Icon.search, match: ['search', 'word', 'add'] },
   { route: { name: 'stats' }, label: 'Progress', icon: Icon.stats, match: ['stats'] },
@@ -42,6 +43,7 @@ export function App() {
       {route.name === 'word' && <WordPage key={route.id} id={route.id} />}
       {route.name === 'add' && <AddWord key={`${route.word}-${route.listId}`} initial={route.word} listId={route.listId} />}
       {route.name === 'search' && <Search key={route.q ?? ''} q={route.q} />}
+      {route.name === 'collection' && <Collection key={route.kind} kind={route.kind} />}
       {route.name === 'stats' && <Stats />}
       {route.name === 'settings' && <Settings />}
       {route.name === 'welcome' && <Welcome />}
