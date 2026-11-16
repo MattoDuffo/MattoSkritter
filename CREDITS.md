@@ -6,4 +6,4 @@
   https://github.com/skishore/makemeahanzi
 - **Hanzi Writer** — MIT. https://hanziwriter.org
 - **ts-fsrs** — MIT. https://github.com/open-spaced-repetition/ts-fsrs
-- **HSK 1 and HSK 2 word lists** (HSK 2.0) — from [Complete HSK Vocabulary](https://github.com/drkameleon/complete-hsk-vocabulary) by Yanis Zafirópulos, MIT License (definitions from CC-CEDICT). Built into the app as `src/data/hsk.json`.
+- **HSK 1–6 word lists** (HSK 2.0) — from [Complete HSK Vocabulary](https://github.com/drkameleon/complete-hsk-vocabulary) by Yanis Zafirópulos, MIT License (definitions from CC-CEDICT). Built into the app as `src/data/hsk.json`.
