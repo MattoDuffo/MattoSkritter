@@ -548,6 +548,15 @@ input[type='range'] {
   align-items: center;
   gap: 10px;
   height: 44px;
+  position: relative;
+  z-index: 30; /* stays usable (Undo, close, menu) above the tap-anywhere layer */
+}
+.tap-anywhere {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  cursor: pointer;
+  background: transparent;
 }
 .progress {
   flex: 1;
@@ -922,12 +931,9 @@ input[type='range'] {
 }
 
 .next-char-hint {
-  display: block;
+  text-align: center;
   margin: 12px auto 0;
-  border: 0;
-  background: none;
   color: var(--text-2);
   font-size: 14px;
   padding: 10px 12px;
-  cursor: pointer;
 }

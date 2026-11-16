@@ -56,6 +56,7 @@ for (let n = 0; n < 60 && !found; n++) {
     continue;
   }
   const label = (await page.locator('.part-label').textContent({ timeout: 5000 }).catch(() => '')) ?? '';
+  if (process.env.DEBUG) console.log('  card:', label, await page.locator('.word-row').textContent().catch(() => ''));
   if (label === 'New word') await page.getByRole('button', { name: 'Learn it' }).click();
   else if (label.startsWith('Trace') || label === 'Write') {
     const slots = await page.locator('.word-row .slot').count();
@@ -65,7 +66,10 @@ for (let n = 0; n < 60 && !found; n++) {
     }
     for (let g = 0; g < 6 && !(await page.locator('.grades').isVisible()); g++) {
       if (!((await page.locator('.part-label').textContent().catch(() => '')) ?? '').match(/Trace|Write/)) break;
-      if (await page.locator('.next-char-hint').isVisible()) await page.locator('.next-char-hint').click();
+      if (await page.locator('.tap-anywhere').isVisible()) {
+        await page.waitForTimeout(500);
+        await page.mouse.click(195, 600);
+      }
       else if (await page.locator('.feedback.ok').isVisible()) break;
       else await drawCurrentChar();
     }
@@ -104,9 +108,9 @@ check(await page.locator('.next-char-hint').isVisible(), 'after the 1st characte
 await page.waitForTimeout(1500);
 check(await page.locator('.next-char-hint').isVisible(), 'still waiting after 1.5 s (no auto-advance)');
 await shot('u1-tap-to-continue');
-await page.locator('.canvas-wrap').click(); // tapping the drawing area moves on too
+await page.mouse.click(30, 120); // tap near the top of the screen, far from the hint text
 await page.waitForTimeout(300);
-check((await currentSlot()) === 1, 'tapping the drawing area moved to the 2nd character');
+check((await currentSlot()) === 1, 'tapping anywhere (top of the screen) moved to the 2nd character');
 
 // 3b. Undo on the 2nd character goes back to the 1st character of the same word
 await page.getByRole('button', { name: 'Undo / back' }).click();
@@ -118,7 +122,8 @@ check(await page.locator('.part-label').textContent() === 'Write', 'still on the
 for (let c = 0; c < nChars; c++) {
   await drawCurrentChar();
   if (c < nChars - 1) {
-    await page.locator('.next-char-hint').click();
+    await page.waitForTimeout(500);
+    await page.mouse.click(350, 640); // bottom-right corner of the screen
     await page.waitForTimeout(300);
   }
 }

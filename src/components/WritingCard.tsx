@@ -174,7 +174,7 @@ export function WritingCard({
           );
         })}
       </div>
-      <div className="canvas-wrap" style={{ width: size, height: size }} onClick={awaitNext ? () => goNextChar(true) : undefined}>
+      <div className="canvas-wrap" style={{ width: size, height: size }}>
         <Grid size={size} kind={settings.grid} />
         <Writer
           key={`${idx}-${nonce}`}
@@ -203,9 +203,11 @@ export function WritingCard({
         />
       </div>
       {awaitNext && (
-        <button className="next-char-hint" onClick={() => goNextChar()}>
-          Tap to move to the next character ›
-        </button>
+        <>
+          {/* tap anywhere on the screen (except the top bar) to go on */}
+          <div className="tap-anywhere" onClick={() => goNextChar(true)} aria-label="Next character" role="button" />
+          <div className="next-char-hint">Tap anywhere to move to the next character ›</div>
+        </>
       )}
       {!finished && !awaitNext && (
         <div className="canvas-tools">

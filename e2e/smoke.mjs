@@ -19,8 +19,9 @@ process.on('unhandledRejection', async (e) => { console.error(e); try { await sh
 
 async function drawChar(charEl) {
   // between characters of a word the app waits for a tap
-  if (await page.locator('.next-char-hint').isVisible().catch(() => false)) {
-    await page.locator('.next-char-hint').click();
+  if (await page.locator('.tap-anywhere').isVisible().catch(() => false)) {
+    await page.waitForTimeout(500);
+    await page.mouse.click(195, 600);
     await page.waitForTimeout(300);
   }
   const char = await charEl.getAttribute('data-char');
