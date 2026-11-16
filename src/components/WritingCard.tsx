@@ -88,11 +88,12 @@ export function WritingCard({
     setIdx(idx + 1);
   };
 
-  // Undo inside the word: back to the previous character (or reopen the one just finished).
-  const canBack = finished ? chars.length > 1 && mode === 'quiz' : awaitNext || idx > 0;
+  // Undo inside the word: at the grading step, clear the last character (and the grade) so it can
+  // be written again; otherwise go back to the previous character.
+  const canBack = finished ? mode === 'quiz' : awaitNext || idx > 0;
   const back = (): boolean => {
     if (finished) {
-      if (chars.length < 2 || mode !== 'quiz') return false;
+      if (mode !== 'quiz') return false;
       setResults(results.slice(0, idx));
       setFinished(false);
       setRestoredView(false);
