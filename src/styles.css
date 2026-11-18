@@ -680,7 +680,9 @@ button.stat:active {
 .grades button.auto {
   opacity: 1;
   border-color: var(--text);
-  transform: scale(1.04);
+  /* No transform here: a scaled button gets its own compositing layer, and iOS Safari can
+     leave a ghost of it on the next screen after the grade bar unmounts. */
+  box-shadow: 0 0 0 1px var(--text);
 }
 .grades.none-auto button {
   opacity: 1;
