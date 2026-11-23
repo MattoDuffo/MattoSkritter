@@ -32,12 +32,13 @@ export function App() {
     else document.documentElement.setAttribute('data-theme', t);
   }, [settings?.theme]);
 
-  const showTabs = route.name !== 'session' && route.name !== 'welcome';
+  const showTabs = route.name !== 'session' && route.name !== 'learn' && route.name !== 'welcome';
 
   return (
     <div className="app">
       {route.name === 'home' && <Home />}
-      {route.name === 'session' && <Session key={location.hash} forceNew={route.forceNew} />}
+      {route.name === 'session' && <Session key={location.hash} />}
+      {route.name === 'learn' && <Session key={location.hash} learn />}
       {route.name === 'lists' && <Lists />}
       {route.name === 'list' && <ListDetail id={route.id} />}
       {route.name === 'word' && <WordPage key={route.id} id={route.id} />}

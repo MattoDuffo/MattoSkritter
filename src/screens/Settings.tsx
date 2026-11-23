@@ -3,15 +3,7 @@ import { Seg, Toggle, TopBar, useToast } from '../components/common';
 import { isPersisted, lastBackupAt, requestPersistence, restoreBackup, saveBackupFile } from '../lib/backup';
 import { db, PARTS, PART_LABEL } from '../lib/db';
 import { DEFAULT_SETTINGS, useSettings } from '../lib/settings';
-import { struggleThreshold } from '../lib/srs';
 import { go } from '../router';
-
-function stubbornText(v: number) {
-  if (v <= 0) return 'Eager: new words always come, up to your daily limit.';
-  const t = Math.round(struggleThreshold(v));
-  const name = v >= 90 ? 'Skritter-strict' : v >= 60 ? 'Strict' : v >= 35 ? 'Balanced' : 'Relaxed';
-  return `${name}: new words slow down as struggling words pile up and stop at about ${t}.`;
-}
 
 function shuffleText(days: number) {
   if (days <= 0) return 'off (strict due order)';
@@ -36,30 +28,6 @@ export function Settings() {
   return (
     <div className="screen">
       <TopBar title="Settings" />
-
-      <div className="card">
-        <h2>New words</h2>
-        <label className="field">
-          <span>New words per day: {s.newPerDay}</span>
-          <input type="range" min={0} max={40} value={s.newPerDay} onChange={(e) => update({ newPerDay: Number(e.target.value) })} />
-        </label>
-        <label className="field">
-          <span>Stubbornness: {s.stubbornness}</span>
-          <input type="range" min={0} max={100} step={5} value={s.stubbornness} onChange={(e) => update({ stubbornness: Number(e.target.value) })} />
-          <div className="row small muted">
-            <span>Eager</span>
-            <span className="spacer" />
-            <span>Balanced</span>
-            <span className="spacer" />
-            <span>Skritter-strict</span>
-          </div>
-        </label>
-        <p className="small">{stubbornText(s.stubbornness)}</p>
-        <p className="small muted">
-          Struggling words are ones you learned or failed recently that the scheduler isn't confident about yet. “Add 5 new words now” on the home screen
-          always works.
-        </p>
-      </div>
 
       <div className="card">
         <h2>Reviews</h2>

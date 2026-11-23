@@ -6,7 +6,7 @@ import { ToneCard } from '../components/ToneCard';
 import { WritingCard, type CharResult } from '../components/WritingCard';
 import { Sheet, useToast } from '../components/common';
 import { db, PART_LABEL, type Item, type StoredCard, type Word } from '../lib/db';
-import { buildSession, stepsAfterIntro, type Step } from '../lib/queue';
+import { buildSession, pendingNewWords, stepsAfterIntro, topUpLearn, type Step } from '../lib/queue';
 import { loadSettings, type Settings } from '../lib/settings';
 import { review, type Grade4 } from '../lib/srs';
 import { introduceWord, markKnown, setBanned, upsertWord } from '../lib/words';
@@ -28,7 +28,11 @@ interface Snapshot {
   answers?: (number | null)[];
 }
 
-export function Session({ forceNew }: { forceNew?: number }) {
+/**
+ * A practice session (reviews only), or with `learn` an endless run of new words from the active
+ * lists: each word is introduced, traced and quizzed, with the next word queued as you go.
+ */
+export function Session({ learn = false }: { learn?: boolean }) {
   const [settings, setSettings] = useState<Settings | null>(null);
   const [steps, setSteps] = useState<Step[] | null>(null);
   const [idx, setIdx] = useState(0);
@@ -50,20 +54,34 @@ export function Session({ forceNew }: { forceNew?: number }) {
   }, []);
   const started = useRef(Date.now());
   const [toast, showToast] = useToast();
+  // Learn mode: words in the active lists not yet introduced, in list order (read once at start)
+  const pending = useRef<string[]>([]);
 
-  const start = useCallback(async (extraNew?: number) => {
+  const start = useCallback(async () => {
     const s = await loadSettings();
     setSettings(s);
-    const { steps } = await buildSession(s, { size: s.sessionSize, forceNew: extraNew });
-    setSteps(steps);
+    if (learn) {
+      pending.current = await pendingNewWords();
+      setSteps(topUpLearn([], pending.current, -1));
+    } else {
+      const { steps } = await buildSession(s, { size: s.sessionSize });
+      setSteps(steps);
+    }
     setIdx(0);
     setHistory([]);
     setResults([]);
-  }, []);
+  }, [learn]);
 
   useEffect(() => {
-    start(forceNew);
-  }, [start, forceNew]);
+    start();
+  }, [start]);
+
+  // Learn mode never runs dry while words are left: keep the next new word queued.
+  useEffect(() => {
+    if (!learn || !steps) return;
+    const topped = topUpLearn(steps, pending.current, idx);
+    if (topped !== steps) setSteps(topped);
+  }, [learn, steps, idx]);
 
   const step = steps?.[idx];
 
@@ -111,11 +129,13 @@ export function Session({ forceNew }: { forceNew?: number }) {
     );
     const { immediate, later } = stepsAfterIntro(created);
     setSteps((old) => {
-      const s = [...(old ?? [])];
+      let s = [...(old ?? [])];
       s.splice(idx + 1, 0, ...immediate);
+      // In Learn mode the next word is queued first, so this word's cards can come after it.
+      if (learn) s = [...topUpLearn(s, pending.current, idx + immediate.length)];
       // Spread the new word's cards over the rest of the session, at least a few cards apart,
       // so its reading, writing and meaning don't come one after the other.
-      const start = idx + 1 + immediate.length + 2;
+      const start = idx + 1 + immediate.length + (learn ? 1 : 2);
       const room = Math.max(0, s.length - start);
       const gap = Math.max(4, Math.floor(room / Math.max(1, later.length)));
       later.forEach((l, k) => {
@@ -226,6 +246,8 @@ export function Session({ forceNew }: { forceNew?: number }) {
 
   const total = steps.length;
   const done = idx >= total;
+  // intros already passed in this session (words learned or marked known)
+  const learnedCount = steps.slice(0, idx).filter((x) => x.kind === 'intro').length;
 
   if (total === 0 || done) {
     const n = results.length;
@@ -239,11 +261,21 @@ export function Session({ forceNew }: { forceNew?: number }) {
           </button>
         </div>
         <div className="reveal-area">
-          {total === 0 ? (
+          {learn ? (
+            <>
+              <div className="big-han han">{total === 0 ? '空' : '棒'}</div>
+              <h2>{total === 0 ? 'No new words left' : 'All new words learned'}</h2>
+              <p className="muted">
+                {total === 0
+                  ? 'Every word in your active lists has been learned. Add words or turn on another list to learn more.'
+                  : `You've gone through every new word in your active lists (${learnedCount} this time).`}
+              </p>
+            </>
+          ) : total === 0 ? (
             <>
               <div className="big-han han">好</div>
               <h2>Nothing due right now</h2>
-              <p className="muted">You're all caught up. You can add new words now if you like.</p>
+              <p className="muted">You're all caught up.</p>
             </>
           ) : (
             <>
@@ -256,14 +288,16 @@ export function Session({ forceNew }: { forceNew?: number }) {
           )}
         </div>
         <div className="stack" style={{ marginTop: 'auto' }}>
-          {total > 0 && (
+          {!learn && total > 0 && (
             <button className="btn primary big" onClick={() => start()}>
               Keep going
             </button>
           )}
-          <button className="btn big" onClick={() => start(5)}>
-            Add 5 new words now
-          </button>
+          {learn && total === 0 && (
+            <button className="btn big" onClick={() => go({ name: 'lists' })}>
+              Lists
+            </button>
+          )}
           {history.length > 0 && (
             <button className="btn ghost block" onClick={undo}>
               Undo last answer
@@ -284,12 +318,20 @@ export function Session({ forceNew }: { forceNew?: number }) {
         <button className="icon-btn" onClick={() => go({ name: 'home' })} aria-label="Close">
           <Icon.close />
         </button>
-        <div className="progress">
-          <div style={{ width: `${(100 * idx) / total}%` }} />
-        </div>
-        <span className="small muted">
-          {idx}/{total}
-        </span>
+        {learn ? (
+          <span className="small muted" style={{ flex: 1 }}>
+            Learning new words · {learnedCount} so far
+          </span>
+        ) : (
+          <>
+            <div className="progress">
+              <div style={{ width: `${(100 * idx) / total}%` }} />
+            </div>
+            <span className="small muted">
+              {idx}/{total}
+            </span>
+          </>
+        )}
         <button className="undo-btn" disabled={!history.length && !cardCanBack} onClick={undo} aria-label="Undo / back">
           <Icon.undo />
           Undo

@@ -53,9 +53,7 @@ export function Home() {
   const newReason =
     status.newAvailable === 0
       ? 'No new words left in your active lists'
-      : s.stubbornness <= 0
-        ? `${status.newAllowed} new word${status.newAllowed === 1 ? '' : 's'} today (stubbornness off)`
-        : `${status.newAllowed} new word${status.newAllowed === 1 ? '' : 's'} today (${status.struggling} struggling word${status.struggling === 1 ? '' : 's'}, stubbornness ${s.stubbornness})`;
+      : `${status.introducedToday} new word${status.introducedToday === 1 ? '' : 's'} learned today · ${status.newAvailable} left to learn`;
 
   return (
     <div className="screen">
@@ -139,8 +137,8 @@ export function Home() {
         <button className="btn primary big" onClick={() => go({ name: 'session' })}>
           Study
         </button>
-        <button className="btn big" disabled={status.newAvailable === 0} onClick={() => go({ name: 'session', forceNew: 5 })}>
-          Add 5 new words now
+        <button className="btn big" disabled={status.newAvailable === 0} onClick={() => go({ name: 'learn' })}>
+          Learn new words
         </button>
       </div>
 

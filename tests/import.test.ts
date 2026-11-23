@@ -4,7 +4,7 @@ import path from 'node:path';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { useDatabase } from '../src/lib/db';
 import { importSkritter, isStudiedExport, listNameFromFile, parseExport } from '../src/lib/importer';
-import { buildSession, pendingNewWords, studyStatus } from '../src/lib/queue';
+import { buildSession, pendingNewWords, topUpLearn } from '../src/lib/queue';
 import { DEFAULT_SETTINGS } from '../src/lib/settings';
 import { setStrokeCheck } from '../src/lib/words';
 
@@ -49,16 +49,21 @@ describe('import + session', () => {
     expect(day1.length).toBeGreaterThan(20);
     expect(day1.every((i) => i.part === 'write')).toBe(true);
   });
-  it('builds a session with reviews and new words', async () => {
+  it('builds a practice session with reviews only', async () => {
     const s = { ...DEFAULT_SETTINGS, stubbornness: 0 };
-    const st = await studyStatus(s, now + 3600_000);
-    expect(st.newAllowed).toBe(10);
-    const { steps, newWords } = await buildSession(s, { size: 30, now: now + 3600_000 });
-    expect(newWords.length).toBeGreaterThan(0);
-    expect(steps.filter((x) => x.kind === 'intro').length).toBe(newWords.length);
+    const { steps } = await buildSession(s, { size: 30, now: now + 3600_000 });
+    expect(steps.length).toBeGreaterThan(0);
+    expect(steps.every((x) => x.kind === 'review')).toBe(true);
     const fam = (x: (typeof steps)[number]) => (x.kind === 'intro' ? x.wordId : x.family ?? x.wordId);
-    for (let i = 1; i < steps.length; i++) {
-      if (steps[i].kind === 'review' && steps[i - 1].kind === 'review') expect(fam(steps[i])).not.toBe(fam(steps[i - 1]));
-    }
+    for (let i = 1; i < steps.length; i++) expect(fam(steps[i])).not.toBe(fam(steps[i - 1]));
+  });
+  it('learn mode always queues the next pending word', async () => {
+    const pending = await pendingNewWords();
+    let steps = topUpLearn([], pending, -1);
+    expect(steps).toEqual([{ kind: 'intro', wordId: pending[0] }]);
+    expect(topUpLearn(steps, pending, -1)).toBe(steps); // one already waiting
+    steps = topUpLearn(steps, pending, 0); // at the first intro: queue the second
+    expect(steps.map((x) => x.kind === 'intro' && x.wordId)).toEqual([pending[0], pending[1]]);
+    expect(topUpLearn([], [], -1)).toEqual([]);
   });
 });

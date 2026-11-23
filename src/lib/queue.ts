@@ -1,6 +1,6 @@
 import { db, type Item, type Part } from './db';
 import { dayStart, type Settings } from './settings';
-import { isStruggling, newWordAllowance } from './srs';
+import { isStruggling } from './srs';
 
 export type Step =
   | { kind: 'intro'; wordId: string }
@@ -13,9 +13,6 @@ export interface StudyStatus {
   reviewCapLeft: number;
   struggling: number; // distinct struggling words
   introducedToday: number;
-  newAllowed: number;
-  newTodayCap: number;
-  threshold: number;
   newAvailable: number; // words in active lists not yet introduced
 }
 
@@ -49,7 +46,6 @@ export async function studyStatus(s: Settings, now = Date.now()): Promise<StudyS
   const reviewsToday = await db.reviews.where('ts').aboveOrEqual(start).count();
   const struggling = new Set(items.filter((i) => isStruggling(i.card)).map((i) => i.wordId)).size;
   const introducedToday = await db.words.where('introducedAt').aboveOrEqual(start).count();
-  const a = newWordAllowance({ newPerDay: s.newPerDay, stubbornness: s.stubbornness, struggling, introducedToday });
   const pending = await pendingNewWords();
   return {
     due: items.filter((i) => i.dueAt <= now || i.card.state === 0).length,
@@ -57,9 +53,6 @@ export async function studyStatus(s: Settings, now = Date.now()): Promise<StudyS
     reviewCapLeft: Math.max(0, s.maxReviewsPerDay - reviewsToday),
     struggling,
     introducedToday,
-    newAllowed: Math.min(a.allowed, pending.length),
-    newTodayCap: a.todayCap,
-    threshold: a.threshold,
     newAvailable: pending.length,
   };
 }
@@ -116,18 +109,15 @@ export function spreadByWord<T extends { wordId: string; family?: string }>(step
 
 
 /**
- * Build a session: overdue reviews first (most overdue relative to interval), plus up to the
- * allowed number of new words. New words become intro steps; their cards are inserted after the intro.
+ * Build a practice session: reviews only, never new words (those are learned in Learn mode).
+ * Cards created but never answered come first, then due cards, most overdue first.
  */
-export async function buildSession(
-  s: Settings,
-  opts: { size: number; forceNew?: number; now?: number },
-): Promise<{ steps: Step[]; newWords: string[] }> {
+export async function buildSession(s: Settings, opts: { size: number; now?: number }): Promise<{ steps: Step[] }> {
   const now = opts.now ?? Date.now();
   const status = await studyStatus(s, now);
   const items = await activeItems(s);
 
-  // Cards created but never answered (e.g. a session was left early) come back first.
+  // Cards created but never answered (e.g. Learn mode was left early) come back first.
   const unseen = items.filter((i) => i.card.state === 0);
   // Randomness in the order of due cards (setting, default up to a day) so the same cards don't always come together.
   const jitter = new Map(items.map((i) => [i.id, Math.random() * s.shuffleDays * 86_400_000]));
@@ -135,37 +125,23 @@ export async function buildSession(
     .filter((i) => i.card.state !== 0 && i.dueAt <= now)
     .sort((a, b) => a.dueAt + jitter.get(a.id)! - (b.dueAt + jitter.get(b.id)!));
 
-  let newWords: string[] = [];
-  const pending = await pendingNewWords();
-  if (opts.forceNew) newWords = pending.slice(0, opts.forceNew);
-  else if (status.newAllowed > 0) {
-    const parts = Object.values(s.parts).filter(Boolean).length || 1;
-    // new words may take up to ~40% of the session
-    const slots = Math.max(1, Math.floor((opts.size * 0.4) / parts));
-    newWords = pending.slice(0, Math.min(status.newAllowed, slots));
-  }
-
-  const parts = Object.values(s.parts).filter(Boolean).length || 1;
-  const reviewRoom = opts.forceNew
-    ? Math.max(0, opts.size - newWords.length * parts)
-    : Math.max(0, Math.min(opts.size - newWords.length * parts, status.reviewCapLeft));
-  const reviewItems = [...unseen, ...due].slice(0, reviewRoom);
-  const reviewSteps: Step[] = spreadByWord(
+  const reviewItems = [...unseen, ...due].slice(0, Math.max(0, Math.min(opts.size, status.reviewCapLeft)));
+  const steps: Step[] = spreadByWord(
     reviewItems.map((i) => ({ kind: 'review' as const, itemId: i.id, wordId: i.wordId, part: i.part, family: i.charOf ?? i.wordId })),
   );
-
-  // Interleave intros evenly through the reviews.
-  const steps: Step[] = [];
-  const every = newWords.length ? Math.max(1, Math.floor(reviewSteps.length / (newWords.length + 1))) : 0;
-  let n = 0;
-  for (let i = 0; i < reviewSteps.length; i++) {
-    if (every && i > 0 && i % every === 0 && n < newWords.length) steps.push({ kind: 'intro', wordId: newWords[n++] });
-    steps.push(reviewSteps[i]);
-  }
-  while (n < newWords.length) steps.push({ kind: 'intro', wordId: newWords[n++] });
-  return { steps, newWords };
+  return { steps };
 }
 
+/**
+ * Learn mode: keep the next new word queued. If no intro is waiting after `idx`, append the
+ * first pending word that isn't already in the session. Returns the same array when nothing changes.
+ */
+export function topUpLearn(steps: Step[], pending: string[], idx: number): Step[] {
+  if (steps.slice(idx + 1).some((x) => x.kind === 'intro')) return steps;
+  const queued = new Set(steps.filter((x) => x.kind === 'intro').map((x) => x.wordId));
+  const next = pending.find((w) => !queued.has(w));
+  return next ? [...steps, { kind: 'intro', wordId: next }] : steps;
+}
 
 /** After an intro, its new cards: trace first for writing, the graded cards spread over the next steps. */
 export function stepsAfterIntro(created: Item[]): { immediate: Step[]; later: Step[] } {

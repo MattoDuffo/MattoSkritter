@@ -45,16 +45,12 @@ await page.getByText('Import my Skritter data').click();
 await page.getByText('Import finished').waitFor({ timeout: 180000 });
 await page.getByRole('button', { name: 'OK' }).click();
 await page.waitForTimeout(500);
-await page.goto(base + '#/session?new=5');
+await page.goto(base + '#/learn');
 
 // Go through cards until a writing review of a word with 2+ characters.
 let found = false;
 for (let n = 0; n < 60 && !found; n++) {
   await page.waitForTimeout(300);
-  if (await page.getByText('Session complete').isVisible().catch(() => false)) {
-    await page.getByRole('button', { name: 'Add 5 new words now' }).click();
-    continue;
-  }
   const label = (await page.locator('.part-label').textContent({ timeout: 5000 }).catch(() => '')) ?? '';
   if (process.env.DEBUG) console.log('  card:', label, await page.locator('.word-row').textContent().catch(() => ''));
   if (label === 'New word') await page.getByRole('button', { name: 'Learn it' }).click();

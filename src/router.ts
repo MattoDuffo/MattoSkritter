@@ -5,7 +5,8 @@ const KINDS: CollectionKind[] = ['studied', 'chars', 'new'];
 
 export type Route =
   | { name: 'home' }
-  | { name: 'session'; forceNew?: number }
+  | { name: 'session' }
+  | { name: 'learn' }
   | { name: 'lists' }
   | { name: 'list'; id: number }
   | { name: 'word'; id: string }
@@ -22,7 +23,9 @@ export function parseHash(hash: string): Route {
   const [a, b] = path.split('/').map(decodeURIComponent);
   switch (a) {
     case 'session':
-      return { name: 'session', forceNew: params.get('new') ? Number(params.get('new')) : undefined };
+      return { name: 'session' };
+    case 'learn':
+      return { name: 'learn' };
     case 'lists':
       return { name: 'lists' };
     case 'list':
@@ -50,8 +53,6 @@ export function href(r: Route): string {
   switch (r.name) {
     case 'home':
       return '#/';
-    case 'session':
-      return r.forceNew ? `#/session?new=${r.forceNew}` : '#/session';
     case 'list':
       return `#/list/${r.id}`;
     case 'word':
