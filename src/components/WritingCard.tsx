@@ -14,6 +14,8 @@ export interface CharResult {
   drawn: number; // strokes drawn for you
   hinted: boolean;
   revealed: boolean;
+  /** the grade the player gave this character */
+  grade?: Grade4;
 }
 
 /** Grade rules from the plan (section 4c). */
@@ -22,6 +24,12 @@ export function gradeChar(r: CharResult): Grade4 {
   if (r.mistakes > 0 || r.hinted) return 2;
   return 3;
 }
+
+/** A character's grade: the one the player gave, else the suggested one. */
+export const charGrade = (r: CharResult): Grade4 => r.grade ?? gradeChar(r);
+
+/** A word is graded by its worst character. */
+export const wordGrade = (results: CharResult[]): Grade4 => Math.min(...results.map(charGrade)) as Grade4;
 
 export function WritingCard({
   word,
@@ -46,9 +54,14 @@ export function WritingCard({
   const size = useCanvasSize(420, 340);
   const [idx, setIdx] = useState(restored ? chars.length - 1 : 0);
   const [results, setResults] = useState<CharResult[]>(restored?.results ?? []);
-  const [finished, setFinished] = useState(!!restored);
-  const [restoredView, setRestoredView] = useState(!!restored);
-  // a character is done and more follow: wait for a tap instead of moving on by itself
+  // trace: the whole word is drawn. quiz: the last character is graded
+  const [finished, setFinished] = useState(false);
+  // quiz: the current character is written and waits for its grade
+  const [charDone, setCharDone] = useState(!!restored);
+  // the current character is shown already written (coming back with Undo), not drawn by the player
+  const [shownDone, setShownDone] = useState(!!restored);
+  const restoredView = shownDone;
+  // trace: a character is done and more follow: wait for a tap instead of moving on by itself
   const [awaitNext, setAwaitNext] = useState(false);
   const awaitSince = useRef(0);
   const [nonce, setNonce] = useState(0);
@@ -70,14 +83,35 @@ export function WritingCard({
     const next = [...results];
     next[idx] = r;
     setResults(next);
+    if (mode === 'quiz') {
+      // every character gets its own grade
+      setCharDone(true);
+      if (idx + 1 === chars.length && settings.autoplayAudio) speak(word.simp, word.pinyin);
+      return;
+    }
     if (idx + 1 < chars.length) {
       awaitSince.current = Date.now();
       setAwaitNext(true);
     } else {
       setFinished(true);
       if (settings.autoplayAudio) speak(word.simp, word.pinyin);
-      if (mode === 'trace') setTimeout(() => onDone(null, { mistakes: 0, results: next }), 700);
+      setTimeout(() => onDone(null, { mistakes: 0, results: next }), 700);
     }
+  };
+
+  /** quiz: the player graded the current character; the word gets its worst character's grade */
+  const gradeCurrent = (g: Grade4) => {
+    const next = [...results];
+    next[idx] = { ...next[idx], grade: g };
+    setResults(next);
+    if (idx + 1 < chars.length) {
+      setCharDone(false);
+      setShownDone(false);
+      setIdx(idx + 1);
+      return;
+    }
+    setFinished(true);
+    onDone(wordGrade(next), { mistakes: next.reduce((n, x) => n + x.mistakes, 0), results: next });
   };
 
   const goNextChar = (fromCanvas = false) => {
@@ -88,18 +122,29 @@ export function WritingCard({
     setIdx(idx + 1);
   };
 
-  // Undo inside the word: at the grading step, clear the last character (and the grade) so it can
-  // be written again; otherwise go back to the previous character.
-  const canBack = finished ? mode === 'quiz' : awaitNext || idx > 0;
+  // Undo inside the word: at a character's grading step, clear it so it can be written again; while
+  // writing, go back to the previous character's grading step (shown written, with its grade).
+  const canBack = mode === 'quiz' ? !finished && (charDone || idx > 0) : !finished && (awaitNext || idx > 0);
   const back = (): boolean => {
-    if (finished) {
-      if (mode !== 'quiz') return false;
-      setResults(results.slice(0, idx));
-      setFinished(false);
-      setRestoredView(false);
-      resetChar();
-      setNonce((n) => n + 1);
-      return true;
+    if (finished) return false;
+    if (mode === 'quiz') {
+      if (charDone) {
+        setResults(results.slice(0, idx));
+        setCharDone(false);
+        setShownDone(false);
+        resetChar();
+        setNonce((n) => n + 1);
+        return true;
+      }
+      if (idx > 0) {
+        setResults(results.slice(0, idx));
+        setIdx(idx - 1);
+        setCharDone(true);
+        setShownDone(true);
+        setNonce((n) => n + 1);
+        return true;
+      }
+      return false;
     }
     if (awaitNext) {
       setResults(results.slice(0, idx));
@@ -125,14 +170,14 @@ export function WritingCard({
 
   const hint = () => {
     const w = writerRef.current;
-    if (!w || finished) return;
+    if (!w || finished || charDone) return;
     cur.current.hinted = true;
     w.highlightStroke(stroke.current);
   };
 
   const reveal = () => {
     const w = writerRef.current;
-    if (!w || finished) return;
+    if (!w || finished || charDone) return;
     cur.current.revealed = true;
     w.cancelQuiz();
     revealWriterChar(w);
@@ -140,9 +185,17 @@ export function WritingCard({
     w.animateCharacter({ onComplete: () => finishChar() });
   };
 
-  const total = results.reduce((n, r) => n + (r?.mistakes ?? 0), 0);
+  const last = idx + 1 === chars.length;
+  const curResult = results[idx] as CharResult | undefined;
+  // quiz grading step: the grade suggested for this character (or the one it had, coming back with Undo)
   const auto: Grade4 | undefined =
-    finished && mode === 'quiz' ? (restoredView && restored ? restored.grade : (Math.min(...results.map(gradeChar)) as Grade4)) : undefined;
+    mode === 'quiz' && charDone && curResult
+      ? shownDone && restored && last && !curResult.grade
+        ? restored.grade
+        : charGrade(curResult)
+      : undefined;
+  // on the last character the buttons show the word's intervals: the worst of the earlier characters caps the grade
+  const capBefore = results.slice(0, idx).length ? wordGrade(results.slice(0, idx)) : 4;
 
   if (error) {
     return (
@@ -167,10 +220,10 @@ export function WritingCard({
       <div className="word-row han">
         {chars.map((c, i) => {
           const r = results[i];
-          const g = r ? gradeChar(r) : 0;
+          const g = r ? charGrade(r) : 0;
           return (
-            <span key={i} className={`slot ${i === idx && !finished && !awaitNext ? 'current' : ''} ${r ? 'g' + g : ''}`}>
-              {r || (finished && i <= idx) ? c : ''}
+            <span key={i} className={`slot ${i === idx && !finished && !awaitNext && !charDone ? 'current' : ''} ${r ? 'g' + g : ''}`}>
+              {r ? c : ''}
             </span>
           );
         })}
@@ -210,7 +263,7 @@ export function WritingCard({
           <div className="next-char-hint">Tap anywhere to move to the next character ›</div>
         </>
       )}
-      {!finished && !awaitNext && (
+      {!finished && !awaitNext && !charDone && (
         <div className="canvas-tools">
           <button className="icon-btn" onClick={() => speak(word.simp, word.pinyin)} aria-label="Play audio">
             <Icon.sound />
@@ -250,20 +303,25 @@ export function WritingCard({
           )}
         </div>
       )}
-      {finished && mode === 'quiz' && (
+      {charDone && mode === 'quiz' && curResult && !finished && (
         <>
           <div className="feedback small muted" style={{ margin: '8px 0' }}>
-            {total === 0 && !results.some((r) => r.hinted || r.revealed) ? 'Perfect' : `${total} mistake${total === 1 ? '' : 's'}`}
-            {results.some((r) => r.drawn) ? ' · strokes drawn for you' : ''}
-            {results.some((r) => r.revealed) ? ' · revealed' : ''}
+            {chars.length > 1 && `${chars[idx]} (${idx + 1}/${chars.length}) · `}
+            {curResult.mistakes === 0 && !curResult.hinted && !curResult.revealed
+              ? 'Perfect'
+              : `${curResult.mistakes} mistake${curResult.mistakes === 1 ? '' : 's'}`}
+            {curResult.drawn ? ' · strokes drawn for you' : ''}
+            {curResult.revealed ? ' · revealed' : ''}
+            {last && capBefore < 4 && ` · word graded by its worst character`}
           </div>
           <GradeBar
-            key={restoredView ? 'restored' : 'live'}
-            card={card}
+            key={`${idx}-${nonce}-${shownDone}`}
+            card={last ? card : undefined}
             sched={schedOpts(settings)}
+            cap={last ? capBefore : undefined}
             auto={auto}
-            autoAdvance={settings.autoAdvance && !restoredView}
-            onGrade={(g) => onDone(g, { mistakes: total, results })}
+            autoAdvance={settings.autoAdvance && !shownDone}
+            onGrade={gradeCurrent}
           />
         </>
       )}

@@ -1,5 +1,6 @@
-// End-to-end check of multi-character writing: tap between characters, Undo inside a word,
-// a changed grade shown for 0.5 s, and Undo back to a completed card with its grade.
+// End-to-end check of multi-character writing: each character is graded and the word gets the
+// worst grade, Undo inside a word, a changed grade shown for 0.5 s, and Undo back to a completed
+// card with its grade.
 // Usage: node e2e/undo.mjs [baseUrl] [screenshotDir]
 import { createRequire } from 'node:module';
 import fs from 'node:fs';
@@ -11,7 +12,7 @@ fs.mkdirSync(shots, { recursive: true });
 const browser = await chromium.launch();
 const page = await (await browser.newContext({ ...devices['iPhone 13'], deviceScaleFactor: 1 })).newPage();
 const errors = [];
-page.on('pageerror', (e) => errors.push(String(e)));
+page.on('pageerror', (e) => { const m = `${e.name}: ${e.message} @ ${e.stack}`; errors.push(m); console.log('  PAGE ERROR', m); });
 const shot = (n) => page.screenshot({ path: `${shots}/${n}.png` });
 const check = (ok, msg) => {
   console.log(ok ? '✓' : '✗', msg);
@@ -97,59 +98,82 @@ if (!found) process.exit(1);
 const nChars = await page.locator('.word-row .slot').count();
 console.log('  word has', nChars, 'characters');
 
-// 1. no auto-advance after the first character
-await drawCurrentChar();
-await shot('u0-after-first');
-check(await page.locator('.next-char-hint').isVisible(), 'after the 1st character: "tap to move to the next character" shown');
-await page.waitForTimeout(1500);
-check(await page.locator('.next-char-hint').isVisible(), 'still waiting after 1.5 s (no auto-advance)');
-await shot('u1-tap-to-continue');
-await page.mouse.click(30, 120); // tap near the top of the screen, far from the hint text
-await page.waitForTimeout(300);
-check((await currentSlot()) === 1, 'tapping anywhere (top of the screen) moved to the 2nd character');
+const lastReviewGrade = () =>
+  page.evaluate(
+    () =>
+      new Promise((res) => {
+        const open = indexedDB.open('mattoskritter');
+        open.onsuccess = () => {
+          const cur = open.result.transaction('reviews').objectStore('reviews').openCursor(null, 'prev');
+          cur.onsuccess = () => res(cur.result ? cur.result.value.grade : null);
+        };
+      }),
+  );
+const slotClass = (i) => page.locator('.word-row .slot').nth(i).getAttribute('class');
+const hasIntervals = async () => (await page.locator('.grades button small').count()) > 0;
 
-// 3b. Undo on the 2nd character goes back to the 1st character of the same word
+// 1. the first character gets its own grade bar, without intervals (not the word's grade yet)
+await drawCurrentChar();
+await page.locator('.grades').waitFor();
+await shot('u0-first-char-graded');
+check((await page.locator('.feedback').textContent()).includes(`(1/${nChars})`), 'grade bar for character 1');
+check(!(await hasIntervals()), 'no intervals on a character that is not the last');
+check((await page.locator('.grades button.auto').textContent()).startsWith('Got it'), 'well-written character suggested Got it');
+await page.locator('.grades .g2').click(); // So-so
+await page.waitForTimeout(900);
+check((await currentSlot()) === 1, 'after grading, on to character 2');
+check((await slotClass(0)).includes('g2'), 'character 1 coloured with its grade (So-so)');
+
+// 2. Undo on the 2nd character → back to the 1st character's grade, shown written
+await page.getByRole('button', { name: 'Undo / back' }).click();
+await page.waitForTimeout(600);
+check(await page.locator('.grades').isVisible(), 'Undo on character 2 → character 1 graded again');
+check((await page.locator('.grades button.auto').textContent()).startsWith('So-so'), 'its grade (So-so) is shown');
+await page.waitForTimeout(1300);
+check(await page.locator('.grades').isVisible(), 'no auto-advance when coming back');
+// Undo again → rewrite character 1
 await page.getByRole('button', { name: 'Undo / back' }).click();
 await page.waitForTimeout(400);
-check((await currentSlot()) === 0, 'Undo on the 2nd character → back to the 1st character');
-check(await page.locator('.part-label').textContent() === 'Write', 'still on the same card');
+check(!(await page.locator('.grades').isVisible()) && (await currentSlot()) === 0, 'Undo again → character 1 cleared to write again');
 
-// write the whole word
+// 3. write the word: So-so on character 1, Got it on the rest → the word gets So-so
 for (let c = 0; c < nChars; c++) {
   await drawCurrentChar();
+  await page.locator('.grades').waitFor();
   if (c < nChars - 1) {
-    await page.waitForTimeout(500);
-    await page.mouse.click(350, 640); // bottom-right corner of the screen
-    await page.waitForTimeout(300);
+    await page.locator(c === 0 ? '.grades .g2' : '.grades .g3').click();
+    await page.waitForTimeout(800);
   }
 }
-await page.locator('.grades').waitFor();
-const autoLabel = (await page.locator('.grades button.auto').textContent()).replace(/\d.*$/, '');
-const pick = autoLabel.startsWith('So-so') ? 'Forgot' : 'So-so';
+check(await hasIntervals(), 'the last character shows the word intervals');
+const soso = await page.locator('.grades .g2 small').textContent();
+const gotit = await page.locator('.grades .g3 small').textContent();
+const easy = await page.locator('.grades .g4 small').textContent();
+check(soso === gotit && gotit === easy, `Got it / Too easy show the So-so interval, capped by character 1 (${soso}, ${gotit}, ${easy})`);
+await shot('u1-last-char');
 const before = await page.locator('.word-row').textContent();
 
-// 2. a changed grade is shown for 0.5 s before moving on
+// 4. a changed grade is shown for 0.5 s before moving on
+const pick = 'Too easy';
 await page.locator('.grades button', { hasText: pick }).click();
 await page.waitForTimeout(200);
-const hl = await page.locator('.grades button.auto').textContent().catch(() => '');
-check(hl.startsWith(pick), `changed grade (${autoLabel} → ${pick}) is highlighted`);
-check(await page.locator('.grades').isVisible(), 'still visible 0.2 s after the tap');
-await shot('u2-changed-grade');
+check((await page.locator('.grades button.auto').textContent().catch(() => '')).startsWith(pick), `changed grade (${pick}) is highlighted`);
 await page.waitForTimeout(900);
-check((await page.locator('.word-row').textContent().catch(() => '')) !== before || !(await page.locator('.grades').isVisible()), 'moved on after ~0.5 s');
+check(!(await page.locator('.grades').isVisible()) || (await page.locator('.word-row').textContent().catch(() => '')) !== before, 'moved on after ~0.5 s');
+check((await lastReviewGrade()) === 2, 'the word was graded So-so, its worst character');
 
-// 3a. Undo → back to that card, completed, with the chosen grade visible
+// 5. Undo → back to that card, completed, with the last character's grade
 await page.getByRole('button', { name: 'Undo / back' }).click();
 await page.waitForTimeout(1200);
 check(await page.locator('.grades').isVisible(), 'Undo → previous card shown completed (grade buttons visible)');
-const restoredHl = await page.locator('.grades button.auto').textContent().catch(() => '');
-check(restoredHl.startsWith(pick), `the chosen grade (${pick}) is shown`);
+check((await page.locator('.grades button.auto').textContent().catch(() => '')).startsWith(pick), `the last character's grade (${pick}) is shown`);
 check((await page.locator('.word-row').textContent()) === before, 'all characters shown');
+check((await slotClass(0)).includes('g2'), 'character 1 still coloured So-so');
 await shot('u3-restored');
 await page.waitForTimeout(1500);
 check(await page.locator('.grades').isVisible(), 'restored card does not auto-advance');
 
-// Undo again on a completed multi-character word → reopen its last character
+// Undo again → reopen the last character
 await page.getByRole('button', { name: 'Undo / back' }).click();
 await page.waitForTimeout(500);
 check(!(await page.locator('.grades').isVisible()) && (await currentSlot()) === nChars - 1, 'Undo again → last character reopened');

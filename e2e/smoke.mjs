@@ -42,6 +42,9 @@ async function drawChar(charEl) {
   return char;
 }
 
+/** All of the word's characters are written: the grade bar shown is the word's. */
+const isLastChar = () => page.locator('.word-row .slot').evaluateAll((els) => els.every((e) => e.textContent));
+
 async function drawTone(tone) {
   const pad = page.locator('svg.tone-pad');
   const b = await pad.boundingBox();
@@ -118,12 +121,22 @@ for (let n = 0; n < 40; n++) {
       await page.waitForTimeout(300);
       continue;
     }
-    for (let guard = 0; guard < 6 && !(await page.locator('.grades').isVisible()); guard++) {
-      const w = page.locator('.writer[data-char]');
-      await w.waitFor();
-      await page.waitForTimeout(250);
-      await drawChar(w);
-      await page.waitForTimeout(450);
+    // every character is graded; the bar on the last one grades the word
+    for (let guard = 0; guard < 12; guard++) {
+      if (!(await page.locator('.grades').isVisible())) {
+        const w = page.locator('.writer[data-char]');
+        await w.waitFor();
+        await page.waitForTimeout(250);
+        await drawChar(w);
+        await page.waitForTimeout(450);
+        continue;
+      }
+      if (!(await isLastChar())) {
+        await page.locator('.grades button.auto, .grades .g3').first().click({ timeout: 1500 }).catch(() => {});
+        await page.waitForTimeout(800);
+        continue;
+      }
+      break;
     }
     if (counts.write === 1) await shot('05-writing-done');
     const auto = await page.locator('.grades button.auto').textContent();

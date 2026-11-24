@@ -49,9 +49,15 @@ for (let n = 0; n < 80; n++) {
   // fail every card twice (first round and first redo round), then pass it
   const g = times <= 2 ? 1 : 3;
   if (label === 'Write') {
-    const b = await page.locator('.writer[data-char]').boundingBox();
-    for (let i = 0; i < 400 && !(await page.locator('.grades').isVisible()); i++) {
-      if (await page.locator('.tap-anywhere').isVisible().catch(() => false)) { await page.mouse.click(195, 600); continue; }
+    // scribble until each character is drawn for us; grade every character but the last the same
+    for (let i = 0; i < 800; i++) {
+      if (await page.locator('.grades').isVisible()) {
+        const last = await page.locator('.word-row .slot').evaluateAll((els) => els.every((e) => e.textContent));
+        if (last) break;
+        await page.locator(`.grades .g${g}`).click();
+        await page.waitForTimeout(800);
+        continue;
+      }
       const w = await page.locator('.writer[data-char]').boundingBox();
       await page.mouse.move(w.x + 10, w.y + w.height - 10);
       await page.mouse.down();
@@ -59,7 +65,6 @@ for (let n = 0; n < 80; n++) {
       await page.mouse.up();
       await page.waitForTimeout(80);
     }
-    void b;
   } else if (label === 'Tone') {
     const pad = page.locator('svg.tone-pad');
     for (let i = 0; i < 8 && !(await page.locator('.grades').isVisible()); i++) {

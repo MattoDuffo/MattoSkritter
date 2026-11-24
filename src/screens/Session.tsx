@@ -133,8 +133,19 @@ export function Session({ learn = false }: { learn?: boolean }) {
     setIdx((i) => i + 1);
   };
 
+  // a quick double tap on "Learn it" must not introduce the word twice (the second run would
+  // try to create the same cards again and fail)
+  const introducing = useRef(false);
   const introduce = async (known: boolean) => {
-    if (!step || step.kind !== 'intro' || !settings) return;
+    if (!step || step.kind !== 'intro' || !settings || introducing.current) return;
+    introducing.current = true;
+    try {
+      await introduceStep(step, settings, known);
+    } finally {
+      introducing.current = false;
+    }
+  };
+  const introduceStep = async (step: Extract<Step, { kind: 'intro' }>, settings: Settings, known: boolean) => {
     const now = Date.now();
     const ids = await introduceWord(step.wordId, { now, charItems: settings.charItems });
     if (known) {

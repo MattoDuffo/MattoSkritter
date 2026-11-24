@@ -77,12 +77,15 @@ export function Seg<T extends string>({ value, options, onChange }: { value: T; 
 export function GradeBar({
   card,
   sched,
+  cap,
   auto,
   autoAdvance,
   onGrade,
 }: {
   card?: StoredCard;
   sched?: SchedOpts;
+  /** the card can get no better than this (a word graded by its worst character): intervals shown accordingly */
+  cap?: Grade4;
   auto?: Grade4;
   autoAdvance?: boolean;
   onGrade: (g: Grade4) => void;
@@ -112,7 +115,7 @@ export function GradeBar({
       {([1, 2, 3, 4] as Grade4[]).map((g) => (
         <button key={g} className={`g${g} ${highlighted === g ? 'auto' : ''}`} onClick={() => fire(g, true)}>
           {GRADE_LABEL[g]}
-          {intervals && <small>{intervals[g]}</small>}
+          {intervals && <small>{intervals[Math.min(g, cap ?? 4) as Grade4]}</small>}
         </button>
       ))}
     </div>
