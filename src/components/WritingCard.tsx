@@ -66,6 +66,8 @@ export function WritingCard({
   const awaitSince = useRef(0);
   const [nonce, setNonce] = useState(0);
   const [showOutline, setShowOutline] = useState(false);
+  // quiz: pinyin stays hidden until asked for (or the word is written)
+  const [pinyinShown, setPinyinShown] = useState(mode === 'trace' || !!restored);
   const [error, setError] = useState(false);
   const writerRef = useRef<HanziWriter | null>(null);
   const cur = useRef<CharResult>({ mistakes: 0, drawn: 0, hinted: false, revealed: false });
@@ -212,9 +214,15 @@ export function WritingCard({
     <>
       <div className="prompt">
         <div className="part-label">{mode === 'trace' ? 'Trace the new word' : 'Write'}</div>
-        <div className="pinyin">
-          <Pinyin value={word.pinyin} />
-        </div>
+        {pinyinShown || finished || (last && charDone) ? (
+          <div className="pinyin">
+            <Pinyin value={word.pinyin} />
+          </div>
+        ) : (
+          <button className="show-pinyin" onClick={() => setPinyinShown(true)}>
+            Show pinyin
+          </button>
+        )}
         <div className="def">{word.def}</div>
       </div>
       <div className="word-row han">

@@ -594,6 +594,20 @@ button.stat:active {
   font-size: 20px;
   font-weight: 600;
 }
+.prompt .show-pinyin {
+  display: block;
+  margin: 2px auto;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--accent);
+  border-radius: 999px;
+  padding: 3px 14px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  min-height: 26px;
+  cursor: pointer;
+}
 .prompt .def {
   font-size: 16px;
   color: var(--text-2);
