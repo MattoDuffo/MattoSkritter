@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { db, type Part } from './db';
+import type { SchedOpts } from './srs';
 
 export interface Settings {
   sessionSize: number; // M1: remembered
@@ -19,6 +20,12 @@ export interface Settings {
   dayStartHour: number;
   /** randomness in card order and due times, in days (0 = strict order) */
   shuffleDays: number;
+  /** shortest wait before a card comes back, in minutes */
+  minIntervalMinutes: number;
+  /** longest interval, in days */
+  maxIntervalDays: number;
+  /** recall probability aimed for when a card comes due (higher = shorter intervals) */
+  targetRecall: number;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -38,7 +45,18 @@ export const DEFAULT_SETTINGS: Settings = {
   dailyGoalMinutes: 15,
   dayStartHour: 4,
   shuffleDays: 1,
+  minIntervalMinutes: 30,
+  maxIntervalDays: 365,
+  targetRecall: 0.95,
 };
+
+/** The scheduling settings, as the scheduler takes them. */
+export const schedOpts = (s: Settings): SchedOpts => ({
+  shuffleDays: s.shuffleDays,
+  minMinutes: s.minIntervalMinutes,
+  maxDays: s.maxIntervalDays,
+  retention: s.targetRecall,
+});
 
 let cache: Settings | null = null;
 const listeners = new Set<(s: Settings) => void>();

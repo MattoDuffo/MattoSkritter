@@ -7,7 +7,7 @@ import { WritingCard, type CharResult } from '../components/WritingCard';
 import { Sheet, useToast } from '../components/common';
 import { db, PART_LABEL, type Item, type StoredCard, type Word } from '../lib/db';
 import { buildSession, pendingNewWords, redoRound, stepsAfterIntro, topUpLearn, type Step } from '../lib/queue';
-import { loadSettings, type Settings } from '../lib/settings';
+import { loadSettings, schedOpts, type Settings } from '../lib/settings';
 import { review, type Grade4 } from '../lib/srs';
 import { introduceWord, markKnown, setBanned, upsertWord } from '../lib/words';
 import { go } from '../router';
@@ -175,7 +175,7 @@ export function Session({ learn = false }: { learn?: boolean }) {
     if (g === null) return next();
     const now = Date.now();
     const ms = Math.min(now - started.current, 90_000);
-    const card = review(item.card, g, now, settings!.shuffleDays);
+    const card = review(item.card, g, now, schedOpts(settings!));
     await db.items.put({ ...item, card, dueAt: card.due });
     const reviewId = await db.reviews.add({
       itemId: item.id,

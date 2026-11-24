@@ -22,12 +22,12 @@ describe('card order', () => {
     c = review(c, 3, now);
     c = review(c, 3, c.due);
     const base = c.due;
-    const lo = review(c, 3, base, 1, () => 0).due;
-    const hi = review(c, 3, base, 1, () => 0.999).due;
+    const lo = review(c, 3, base, { shuffleDays: 1 }, () => 0).due;
+    const hi = review(c, 3, base, { shuffleDays: 1 }, () => 0.999).due;
     expect(hi - lo).toBeGreaterThan(0.5 * DAY);
     expect(hi - lo).toBeLessThanOrEqual(DAY);
     // slider at 0: no shift
-    expect(review(c, 3, base, 0, () => 0).due).toBe(review(c, 3, base, 0, () => 0.999).due);
+    expect(review(c, 3, base, { shuffleDays: 0 }, () => 0).due).toBe(review(c, 3, base, { shuffleDays: 0 }, () => 0.999).due);
   });
 });
 

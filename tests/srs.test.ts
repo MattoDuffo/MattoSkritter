@@ -48,15 +48,48 @@ describe('grade button previews', () => {
     let c = newCard(t0);
     let t = t0;
     for (const g of [3, 3, 3, 2, 3, 4, 1, 3, 3] as const) {
-      const shown = previewIntervals(c, t, 1);
+      const shown = previewIntervals(c, t, { shuffleDays: 1 });
       for (const gg of [2, 3, 4] as const) {
         // graded 20 s after the buttons appeared
         const at = t + 20_000;
-        expect(formatInterval(review(c, gg, at, 1).due - at)).toBe(shown[gg]);
+        expect(formatInterval(review(c, gg, at, { shuffleDays: 1 }).due - at)).toBe(shown[gg]);
       }
       expect(shown[1]).toBe('this session');
-      c = review(c, g, t, 1);
+      c = review(c, g, t, { shuffleDays: 1 });
       t = c.due;
     }
+  });
+});
+
+describe('interval bounds', () => {
+  const MIN = 60_000;
+  const DAY = 86_400_000;
+  const run = (opts: { minMinutes?: number; maxDays?: number }, grades: (1 | 2 | 3 | 4)[]) => {
+    let t = Date.UTC(2026, 0, 1);
+    let c = newCard(t);
+    const iv: number[] = [];
+    for (const g of grades) {
+      c = review(c, g, t, opts);
+      iv.push(c.due - t);
+      t = c.due;
+    }
+    return iv;
+  };
+  const mixed = [2, 3, 2, 4, 3, 3, 1, 2, 3, 4, 4, 3, 3, 3, 4, 4, 4, 4] as const;
+
+  it('defaults: never under 30 minutes, never over a year, reached gradually', () => {
+    const iv = run({}, [...mixed]);
+    expect(Math.min(...iv)).toBeGreaterThanOrEqual(30 * MIN);
+    expect(Math.max(...iv)).toBeLessThanOrEqual(365 * DAY);
+    const good = run({}, Array(12).fill(3));
+    expect(good[0]).toBeLessThan(2 * DAY);
+    expect(good[3]).toBeLessThan(45 * DAY); // ~19 days on the 4th review, not months
+    expect(good[11]).toBeGreaterThan(300 * DAY); // reaches the cap eventually
+  });
+
+  it('follows the settings', () => {
+    const iv = run({ minMinutes: 120, maxDays: 30 }, [...mixed]);
+    expect(Math.min(...iv)).toBeGreaterThanOrEqual(120 * MIN);
+    expect(Math.max(...iv)).toBeLessThanOrEqual(30 * DAY);
   });
 });

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { speak } from '../lib/audio';
 import type { StoredCard, Word } from '../lib/db';
-import type { Settings } from '../lib/settings';
+import { schedOpts, type Settings } from '../lib/settings';
 import type { Grade4 } from '../lib/srs';
 import { GradeBar, Pinyin } from './common';
 import { Icon } from './icons';
@@ -64,7 +64,7 @@ export function RevealCard({
           </button>
         </div>
       ) : (
-        <GradeBar card={card} shuffleDays={settings.shuffleDays} auto={restored?.grade} onGrade={onDone} />
+        <GradeBar card={card} sched={schedOpts(settings)} auto={restored?.grade} onGrade={onDone} />
       )}
     </>
   );

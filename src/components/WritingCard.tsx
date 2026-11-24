@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { speak } from '../lib/audio';
 import type { StoredCard, Word } from '../lib/db';
 import { hanChars } from '../lib/pinyin';
-import type { Settings } from '../lib/settings';
+import { schedOpts, type Settings } from '../lib/settings';
 import type { Grade4 } from '../lib/srs';
 import { GradeBar, Pinyin, useCanvasSize } from './common';
 import { Icon } from './icons';
@@ -260,7 +260,7 @@ export function WritingCard({
           <GradeBar
             key={restoredView ? 'restored' : 'live'}
             card={card}
-            shuffleDays={settings.shuffleDays}
+            sched={schedOpts(settings)}
             auto={auto}
             autoAdvance={settings.autoAdvance && !restoredView}
             onGrade={(g) => onDone(g, { mistakes: total, results })}

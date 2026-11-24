@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { speak } from '../lib/audio';
 import type { StoredCard, Word } from '../lib/db';
 import { hanChars, syllables, toMarks } from '../lib/pinyin';
-import type { Settings } from '../lib/settings';
+import { schedOpts, type Settings } from '../lib/settings';
 import type { Grade4 } from '../lib/srs';
 import { classifyTone, type Pt } from '../lib/tone';
 import { GradeBar, useCanvasSize } from './common';
@@ -135,7 +135,7 @@ export function ToneCard({
           </button>
         </div>
       )}
-      {finished && <GradeBar card={card} shuffleDays={settings.shuffleDays} auto={auto} autoAdvance={settings.autoAdvance && !restored} onGrade={(g) => onDone(g, { mistakes: wrong, answers })} />}
+      {finished && <GradeBar card={card} sched={schedOpts(settings)} auto={auto} autoAdvance={settings.autoAdvance && !restored} onGrade={(g) => onDone(g, { mistakes: wrong, answers })} />}
     </>
   );
 }

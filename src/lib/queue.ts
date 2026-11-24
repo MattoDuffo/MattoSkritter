@@ -19,8 +19,20 @@ export interface StudyStatus {
 const enabled = (s: Settings, item: Item) =>
   !item.banned && s.parts[item.part] && (s.charItems || !item.charOf);
 
-export async function activeItems(s: Settings): Promise<Item[]> {
+export async function activeItems(s: Settings, now = Date.now()): Promise<Item[]> {
+  await capDueDates(s.maxIntervalDays, now);
   return (await db.items.toArray()).filter((i) => enabled(s, i));
+}
+
+/**
+ * Bring in cards scheduled further out than the longest interval (imported from Skritter, or
+ * scheduled before the setting was lowered) so none is due later than `maxDays` from now.
+ */
+export async function capDueDates(maxDays: number, now = Date.now()): Promise<number> {
+  const limit = now + maxDays * 86_400_000;
+  const far = await db.items.where('dueAt').above(limit).toArray();
+  if (far.length) await db.items.bulkPut(far.map((i) => ({ ...i, dueAt: limit, card: { ...i.card, due: limit } })));
+  return far.length;
 }
 
 /** Words in active lists, in list order, not yet introduced. */
@@ -41,7 +53,7 @@ export async function pendingNewWords(): Promise<string[]> {
 }
 
 export async function studyStatus(s: Settings, now = Date.now()): Promise<StudyStatus> {
-  const items = await activeItems(s);
+  const items = await activeItems(s, now);
   const start = dayStart(now, s.dayStartHour);
   const reviewsToday = await db.reviews.where('ts').aboveOrEqual(start).count();
   const struggling = new Set(items.filter((i) => isStruggling(i.card)).map((i) => i.wordId)).size;
@@ -115,7 +127,7 @@ export function spreadByWord<T extends { wordId: string; family?: string }>(step
 export async function buildSession(s: Settings, opts: { size: number; now?: number }): Promise<{ steps: Step[] }> {
   const now = opts.now ?? Date.now();
   const status = await studyStatus(s, now);
-  const items = await activeItems(s);
+  const items = await activeItems(s, now);
 
   // Cards created but never answered (e.g. Learn mode was left early) come back first.
   const unseen = items.filter((i) => i.card.state === 0);

@@ -4,17 +4,49 @@ import type { StoredCard } from './db';
 export type Grade4 = 1 | 2 | 3 | 4; // Forgot, So-so, Got it, Too easy
 export const GRADE_LABEL: Record<Grade4, string> = { 1: 'Forgot', 2: 'So-so', 3: 'Got it', 4: 'Too easy' };
 
-const scheduler = fsrs(generatorParameters({ enable_fuzz: true, request_retention: 0.9, maximum_interval: 3650 }));
+/** How intervals are shaped (all in Settings). */
+export interface SchedOpts {
+  /** spread of review dates, in days (see review) */
+  shuffleDays: number;
+  /** shortest wait before a card comes back, in minutes: the learning step */
+  minMinutes: number;
+  /** longest interval, in days */
+  maxDays: number;
+  /** recall probability the scheduler aims for when a card comes due: higher = shorter intervals */
+  retention: number;
+}
+export const DEFAULT_SCHED: SchedOpts = { shuffleDays: 1, minMinutes: 30, maxDays: 365, retention: 0.95 };
+
+const schedulers = new Map<string, ReturnType<typeof fsrs>>();
+function schedulerFor(o: SchedOpts) {
+  const key = `${o.minMinutes}_${o.maxDays}_${o.retention}`;
+  let sc = schedulers.get(key);
+  if (!sc) {
+    const step = `${Math.max(1, Math.round(o.minMinutes))}m` as const;
+    sc = fsrs(
+      generatorParameters({
+        enable_fuzz: true,
+        request_retention: o.retention,
+        maximum_interval: Math.max(1, Math.round(o.maxDays)),
+        learning_steps: [step],
+        relearning_steps: [step],
+      }),
+    );
+    sc.useStrategy(StrategyMode.SEED, seedStrategy);
+    schedulers.set(key, sc);
+  }
+  return sc;
+}
 /**
  * ts-fsrs seeds its interval fuzz with the exact review time by default, so the interval shown on
  * a grade button (computed when the card appears) and the one applied (when the button is tapped,
  * seconds later) were rolled separately and could differ by days. Seed from the card's state
  * before the review instead: the same card always gets the same fuzz, whenever it is graded.
  */
-scheduler.useStrategy(StrategyMode.SEED, function (this: AbstractScheduler) {
+function seedStrategy(this: AbstractScheduler) {
   // `last` (the card before this review) is protected in the typings but set by the constructor
   return cardSeed((this as unknown as { last: Card }).last);
-});
+}
 
 function cardSeed(c: Pick<Card, 'due' | 'reps' | 'stability' | 'difficulty'> | StoredCard): string {
   const due = typeof c.due === 'number' ? c.due : c.due.getTime();
@@ -68,21 +100,24 @@ const RATING: Record<Grade4, Grade> = { 1: Rating.Again, 2: Rating.Hard, 3: Rati
  * together) drift apart instead of always coming due at the same moment. The shift never moves a
  * card by more than half its interval. The shift is fixed by the card and grade (not random at
  * grading time), so the preview on the grade buttons is exactly what grading does.
+ * The result always lies between the minimum and maximum interval.
  */
 export function review(
   card: StoredCard,
   grade: Grade4,
   now: number,
-  shuffleDays = 1,
+  opts: Partial<SchedOpts> = {},
   rand: () => number = () => hashUnit(`${cardSeed(card)}_${grade}`),
 ): StoredCard {
-  const next = fromCard(scheduler.next(toCard(card), new Date(now), RATING[grade]).card);
+  const o = { ...DEFAULT_SCHED, ...opts };
+  const next = fromCard(schedulerFor(o).next(toCard(card), new Date(now), RATING[grade]).card);
   const interval = next.due - now;
-  if (interval >= DAY && shuffleDays > 0) {
+  if (interval >= DAY && o.shuffleDays > 0) {
     const limit = interval / 2;
-    const shift = Math.max(-limit, Math.min(limit, (rand() - 0.5) * shuffleDays * DAY));
+    const shift = Math.max(-limit, Math.min(limit, (rand() - 0.5) * o.shuffleDays * DAY));
     next.due = Math.round(next.due + shift);
   }
+  next.due = Math.max(now + o.minMinutes * 60_000, Math.min(now + o.maxDays * DAY, next.due));
   return next;
 }
 
@@ -107,8 +142,8 @@ export function knownCard(now: number, dueInDays: number, stabilityDays = Math.m
  * same function grading uses. "Forgot" has none: the card is repeated in the session until it
  * gets at least "So-so", and that grade sets the schedule.
  */
-export function previewIntervals(card: StoredCard, now: number, shuffleDays = 1): Record<Grade4, string> {
-  const fmt = (g: Grade4) => formatInterval(review(card, g, now, shuffleDays).due - now);
+export function previewIntervals(card: StoredCard, now: number, opts: Partial<SchedOpts> = {}): Record<Grade4, string> {
+  const fmt = (g: Grade4) => formatInterval(review(card, g, now, opts).due - now);
   return { 1: 'this session', 2: fmt(2), 3: fmt(3), 4: fmt(4) };
 }
 

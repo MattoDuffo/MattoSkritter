@@ -4,7 +4,7 @@ import path from 'node:path';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { useDatabase } from '../src/lib/db';
 import { importSkritter, isStudiedExport, listNameFromFile, parseExport } from '../src/lib/importer';
-import { buildSession, pendingNewWords, topUpLearn } from '../src/lib/queue';
+import { buildSession, capDueDates, pendingNewWords, topUpLearn } from '../src/lib/queue';
 import { DEFAULT_SETTINGS } from '../src/lib/settings';
 import { setStrokeCheck } from '../src/lib/words';
 
@@ -56,6 +56,15 @@ describe('import + session', () => {
     expect(steps.every((x) => x.kind === 'review')).toBe(true);
     const fam = (x: (typeof steps)[number]) => (x.kind === 'intro' ? x.wordId : x.family ?? x.wordId);
     for (let i = 1; i < steps.length; i++) expect(fam(steps[i])).not.toBe(fam(steps[i - 1]));
+  });
+  it('no card is due later than the longest interval', async () => {
+    const limit = now + 30 * 86_400_000;
+    const far = (await db.items.toArray()).filter((i) => i.dueAt > limit).length;
+    expect(far).toBeGreaterThan(0);
+    expect(await capDueDates(30, now)).toBe(far);
+    const items = await db.items.toArray();
+    expect(items.every((i) => i.dueAt <= limit && i.card.due <= limit)).toBe(true);
+    expect(await capDueDates(30, now)).toBe(0);
   });
   it('learn mode always queues the next pending word', async () => {
     const pending = await pendingNewWords();

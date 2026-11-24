@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { StoredCard } from '../lib/db';
 import { syllables, toMarks } from '../lib/pinyin';
-import { GRADE_LABEL, previewIntervals, type Grade4 } from '../lib/srs';
+import { GRADE_LABEL, previewIntervals, type Grade4, type SchedOpts } from '../lib/srs';
 import { back as goBack } from '../router';
 
 /** Pinyin with tone colours. */
@@ -76,19 +76,19 @@ export function Seg<T extends string>({ value, options, onChange }: { value: T; 
  */
 export function GradeBar({
   card,
-  shuffleDays,
+  sched,
   auto,
   autoAdvance,
   onGrade,
 }: {
   card?: StoredCard;
-  shuffleDays?: number;
+  sched?: SchedOpts;
   auto?: Grade4;
   autoAdvance?: boolean;
   onGrade: (g: Grade4) => void;
 }) {
   const [now] = useState(() => Date.now());
-  const intervals = card ? previewIntervals(card, now, shuffleDays) : null;
+  const intervals = card ? previewIntervals(card, now, sched) : null;
   const done = useRef(false);
   const [chosen, setChosen] = useState<Grade4 | null>(null);
   const fire = (g: Grade4, byUser: boolean) => {

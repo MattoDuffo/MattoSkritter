@@ -11,6 +11,21 @@ function shuffleText(days: number) {
   return `up to ${days} day${days === 1 ? '' : 's'}`;
 }
 
+// slider stops for the interval bounds
+const MIN_STOPS = [5, 10, 15, 20, 30, 45, 60, 90, 120, 180, 240, 360, 480, 720, 1440]; // minutes
+const MAX_STOPS = [7, 14, 30, 60, 90, 120, 180, 270, 365, 545, 730, 1095, 1825, 3650]; // days
+const nearest = (stops: number[], v: number) =>
+  stops.reduce((best, x, i) => (Math.abs(x - v) < Math.abs(stops[best] - v) ? i : best), 0);
+function minutesText(m: number) {
+  return m < 60 ? `${m} min` : m < 1440 ? `${m / 60} hour${m === 60 ? '' : 's'}` : '1 day';
+}
+function daysText(d: number) {
+  if (d < 30) return `${d / 7} week${d === 7 ? '' : 's'}`;
+  if (d < 365) return `${Math.round(d / 30)} month${d < 60 ? '' : 's'}`;
+  const y = Math.round((d / 365) * 2) / 2;
+  return `${y} year${y === 1 ? '' : 's'}`;
+}
+
 export function Settings() {
   const [s, update] = useSettings();
   const [persisted, setPersisted] = useState<boolean | null>(null);
@@ -55,6 +70,37 @@ export function Settings() {
           <div className="small muted">
             Mixes up the order of due cards and spreads review dates by up to this much, so a word's reading, writing and meaning cards don't
             keep coming together.
+          </div>
+        </label>
+        <h3>Intervals</h3>
+        <label className="field">
+          <span>Shortest interval: {minutesText(s.minIntervalMinutes)}</span>
+          <input
+            type="range"
+            min={0}
+            max={MIN_STOPS.length - 1}
+            value={nearest(MIN_STOPS, s.minIntervalMinutes)}
+            onChange={(e) => update({ minIntervalMinutes: MIN_STOPS[Number(e.target.value)] })}
+          />
+          <div className="small muted">How long a new or just-relearned card waits before it comes back.</div>
+        </label>
+        <label className="field">
+          <span>Longest interval: {daysText(s.maxIntervalDays)}</span>
+          <input
+            type="range"
+            min={0}
+            max={MAX_STOPS.length - 1}
+            value={nearest(MAX_STOPS, s.maxIntervalDays)}
+            onChange={(e) => update({ maxIntervalDays: MAX_STOPS[Number(e.target.value)] })}
+          />
+          <div className="small muted">No card waits longer than this, however well you know it.</div>
+        </label>
+        <label className="field">
+          <span>Target recall: {Math.round(s.targetRecall * 100)}%</span>
+          <input type="range" min={0.8} max={0.97} step={0.01} value={s.targetRecall} onChange={(e) => update({ targetRecall: Number(e.target.value) })} />
+          <div className="small muted">
+            How sure the app wants to be that you still remember a card when it comes back. Higher means shorter intervals and more reviews;
+            at 95% a card takes about 9 “Got it” answers to reach a year.
           </div>
         </label>
         <Toggle label="Auto-advance after “Got it”" sub="Moves on after about 1 second" checked={s.autoAdvance} onChange={(v) => update({ autoAdvance: v })} />
