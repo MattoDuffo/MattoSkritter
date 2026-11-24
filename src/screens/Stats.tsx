@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
+import { BarChart } from '../components/BarChart';
 import { TopBar } from '../components/common';
 import { PARTS, PART_LABEL } from '../lib/db';
 import { useSettings } from '../lib/settings';
+import { go } from '../router';
 import { computeStats, type Stats as S } from '../lib/stats';
 
 export function Stats() {
@@ -11,38 +13,37 @@ export function Stats() {
     if (s) computeStats(s).then(setSt);
   }, [s]);
   if (!st || !s) return <div className="loading">Loading…</div>;
-  const maxF = Math.max(1, ...st.forecast.map((f) => f.count));
   const level = (n: number) => (n === 0 ? '' : n < 20 ? 'h1' : n < 50 ? 'h2' : n < 100 ? 'h3' : 'h4');
   return (
     <div className="screen">
       <TopBar title="Progress" />
       <div className="stat-row">
-        <div className="stat">
+        <button className="stat" onClick={() => go({ name: 'stat', kind: 'reviews' })}>
           <b>{st.today.reviews}</b>
           <span>reviews today</span>
-        </div>
-        <div className="stat">
+        </button>
+        <button className="stat" onClick={() => go({ name: 'stat', kind: 'time' })}>
           <b>{Math.round(st.today.minutes)}</b>
           <span>min today</span>
-        </div>
-        <div className="stat">
+        </button>
+        <button className="stat" onClick={() => go({ name: 'stat', kind: 'streak' })}>
           <b>{st.streak}</b>
           <span>day streak</span>
-        </div>
+        </button>
       </div>
       <div className="stat-row" style={{ marginTop: 8, marginBottom: 12 }}>
-        <div className="stat">
+        <button className="stat" onClick={() => go({ name: 'stat', kind: 'words' })}>
           <b>{st.wordsStudied}</b>
           <span>words studied</span>
-        </div>
-        <div className="stat">
+        </button>
+        <button className="stat" onClick={() => go({ name: 'stat', kind: 'chars' })}>
           <b>{st.charsStudied}</b>
           <span>characters</span>
-        </div>
-        <div className="stat">
+        </button>
+        <button className="stat" onClick={() => go({ name: 'stat', kind: 'total' })}>
           <b>{Math.round(st.totalMinutes / 60)}h</b>
           <span>total time</span>
-        </div>
+        </button>
       </div>
 
       <div className="card">
@@ -57,18 +58,14 @@ export function Stats() {
 
       <div className="card">
         <h2>Upcoming reviews</h2>
-        <div className="bars-scroll">
-          <div className="bars">
-            {st.forecast.map((f, i) => (
-              <div className="bar" key={i}>
-                <span className="n">{f.count || ''}</span>
-                <div style={{ height: `${(100 * f.count) / maxF}%` }} />
-                <span className="l">{i === 0 ? 'Now' : f.label.slice(0, 2)}</span>
-                <span className={`l${f.day === 1 ? ' m' : ''}`}>{f.day === 1 ? f.month : f.day}</span>
-              </div>
-            ))}
-          </div>
-        </div>
+        <BarChart
+          bars={st.forecast.map((f, i) => ({
+            value: f.count,
+            l1: i === 0 ? 'Now' : f.label.slice(0, 2),
+            l2: f.day === 1 ? f.month : String(f.day),
+            mark: f.day === 1,
+          }))}
+        />
       </div>
 
       <div className="card">

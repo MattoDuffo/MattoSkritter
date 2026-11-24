@@ -9,6 +9,7 @@ import { ListDetail, Lists } from './screens/Lists';
 import { Search } from './screens/Search';
 import { Session } from './screens/Session';
 import { Settings } from './screens/Settings';
+import { StatDetail } from './screens/StatDetail';
 import { Stats } from './screens/Stats';
 import { Welcome } from './screens/Welcome';
 import { WordPage } from './screens/WordPage';
@@ -17,7 +18,7 @@ const TABS: { route: Route; label: string; icon: () => JSX.Element; match: Route
   { route: { name: 'home' }, label: 'Study', icon: Icon.study, match: ['home', 'collection'] },
   { route: { name: 'lists' }, label: 'Lists', icon: Icon.lists, match: ['lists', 'list'] },
   { route: { name: 'search' }, label: 'Dictionary', icon: Icon.search, match: ['search', 'word', 'add'] },
-  { route: { name: 'stats' }, label: 'Progress', icon: Icon.stats, match: ['stats'] },
+  { route: { name: 'stats' }, label: 'Progress', icon: Icon.stats, match: ['stats', 'stat'] },
   { route: { name: 'settings' }, label: 'Settings', icon: Icon.settings, match: ['settings'] },
 ];
 
@@ -46,6 +47,7 @@ export function App() {
       {route.name === 'search' && <Search key={route.q ?? ''} q={route.q} />}
       {route.name === 'collection' && <Collection key={route.kind} kind={route.kind} />}
       {route.name === 'stats' && <Stats />}
+      {route.name === 'stat' && <StatDetail key={route.kind} kind={route.kind} />}
       {route.name === 'settings' && <Settings />}
       {route.name === 'welcome' && <Welcome />}
       {showTabs && (

@@ -872,6 +872,17 @@ button.stat:active {
   grid-auto-flow: column;
   gap: 3px;
 }
+.heat-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  padding-bottom: 4px;
+}
+.heat.year {
+  grid-template-rows: repeat(7, 14px);
+  grid-auto-columns: 14px;
+  width: max-content;
+}
 .heat div {
   aspect-ratio: 1;
   border-radius: 3px;
