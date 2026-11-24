@@ -821,6 +821,12 @@ button.stat:active {
 }
 
 /* Stats */
+.bars-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  padding-bottom: 4px;
+}
 .bars {
   display: flex;
   align-items: flex-end;
@@ -829,7 +835,8 @@ button.stat:active {
   padding-top: 16px;
 }
 .bars .bar {
-  flex: 1;
+  /* two weeks fit the card; the rest of the year scrolls */
+  flex: 0 0 calc((100% - 13 * 4px) / 14);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -853,6 +860,11 @@ button.stat:active {
   white-space: nowrap;
   overflow: hidden;
   max-width: 100%;
+}
+.bars .bar .l.m {
+  color: var(--accent);
+  font-weight: 600;
+  overflow: visible;
 }
 .heat {
   display: grid;

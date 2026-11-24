@@ -57,14 +57,17 @@ export function Stats() {
 
       <div className="card">
         <h2>Upcoming reviews</h2>
-        <div className="bars">
-          {st.forecast.map((f, i) => (
-            <div className="bar" key={i}>
-              <span className="n">{f.count || ''}</span>
-              <div style={{ height: `${(100 * f.count) / maxF}%` }} />
-              <span className="l">{i === 0 ? 'Now' : f.label.split(' ')[0].slice(0, 2)}</span>
-            </div>
-          ))}
+        <div className="bars-scroll">
+          <div className="bars">
+            {st.forecast.map((f, i) => (
+              <div className="bar" key={i}>
+                <span className="n">{f.count || ''}</span>
+                <div style={{ height: `${(100 * f.count) / maxF}%` }} />
+                <span className="l">{i === 0 ? 'Now' : f.label.slice(0, 2)}</span>
+                <span className={`l${f.day === 1 ? ' m' : ''}`}>{f.day === 1 ? f.month : f.day}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 

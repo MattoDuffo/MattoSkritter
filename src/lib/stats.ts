@@ -9,13 +9,14 @@ export interface Stats {
   totalReviews: number;
   totalMinutes: number;
   accuracy: Record<Part, { total: number; correct: number }>;
-  forecast: { label: string; count: number }[];
+  forecast: { label: string; day: number; month: string; count: number }[]; // next 365 days
   heatmap: { key: string; count: number }[]; // last 84 days, oldest first
   bannedWords: number;
   pendingNew: number;
 }
 
 const DAY = 86_400_000;
+const FORECAST_DAYS = 365;
 
 /** Words with study items of their own (not just as a character inside another word). */
 export function studiedWordIds(items: Item[]): Set<string> {
@@ -59,12 +60,19 @@ export async function computeStats(s: Settings, now = Date.now()): Promise<Stats
 
   const forecast: Stats['forecast'] = [];
   const active = items.filter((i) => !i.banned && s.parts[i.part] && (s.charItems || !i.charOf));
-  for (let d = 0; d < 14; d++) {
-    const from = d === 0 ? -Infinity : start + d * DAY;
-    const to = start + (d + 1) * DAY;
-    const count = active.filter((i) => i.dueAt >= from && i.dueAt < to).length;
-    const date = new Date(start + d * DAY);
-    forecast.push({ label: d === 0 ? 'Today' : date.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric' }), count });
+  const counts = new Array<number>(FORECAST_DAYS).fill(0);
+  for (const i of active) {
+    const d = i.dueAt < start + DAY ? 0 : Math.floor((i.dueAt - start) / DAY);
+    if (d < FORECAST_DAYS) counts[d]++;
+  }
+  for (let d = 0; d < FORECAST_DAYS; d++) {
+    const date = new Date(start + d * DAY + DAY / 2);
+    forecast.push({
+      label: d === 0 ? 'Today' : date.toLocaleDateString(undefined, { weekday: 'short' }),
+      day: date.getDate(),
+      month: date.toLocaleDateString(undefined, { month: 'short' }),
+      count: counts[d],
+    });
   }
 
   const heatmap: Stats['heatmap'] = [];
