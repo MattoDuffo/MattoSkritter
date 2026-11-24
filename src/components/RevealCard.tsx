@@ -64,7 +64,7 @@ export function RevealCard({
           </button>
         </div>
       ) : (
-        <GradeBar card={card} auto={restored?.grade} onGrade={onDone} />
+        <GradeBar card={card} shuffleDays={settings.shuffleDays} auto={restored?.grade} onGrade={onDone} />
       )}
     </>
   );

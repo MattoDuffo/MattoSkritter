@@ -6,7 +6,7 @@ import { ToneCard } from '../components/ToneCard';
 import { WritingCard, type CharResult } from '../components/WritingCard';
 import { Sheet, useToast } from '../components/common';
 import { db, PART_LABEL, type Item, type StoredCard, type Word } from '../lib/db';
-import { buildSession, pendingNewWords, stepsAfterIntro, topUpLearn, type Step } from '../lib/queue';
+import { buildSession, pendingNewWords, redoRound, stepsAfterIntro, topUpLearn, type Step } from '../lib/queue';
 import { loadSettings, type Settings } from '../lib/settings';
 import { review, type Grade4 } from '../lib/srs';
 import { introduceWord, markKnown, setBanned, upsertWord } from '../lib/words';
@@ -41,7 +41,12 @@ export function Session({ learn = false }: { learn?: boolean }) {
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [menu, setMenu] = useState(false);
   const [editing, setEditing] = useState<{ pinyin: string; def: string } | null>(null);
-  const [results, setResults] = useState<{ grade: Grade4; ms: number }[]>([]);
+  const [results, setResults] = useState<{ grade: Grade4; ms: number; retry: boolean }[]>([]);
+  // Practice mode goes in rounds: where each round starts in `steps`. A round's "Forgot" cards are
+  // shuffled into a new round at its end, until every card has at least "So-so".
+  const [rounds, setRounds] = useState<number[]>([0]);
+  // words banned or marked known during the session: their failed cards aren't repeated
+  const dropped = useRef(new Set<string>());
   const [cardKey, setCardKey] = useState(0);
   // set by Undo: the card we went back to is shown completed, with its grade
   const [restored, setRestored] = useState<{ idx: number; grade: Grade4; snapshot: Snapshot } | null>(null);
@@ -70,6 +75,8 @@ export function Session({ learn = false }: { learn?: boolean }) {
     setIdx(0);
     setHistory([]);
     setResults([]);
+    setRounds([0]);
+    dropped.current = new Set();
   }, [learn]);
 
   useEffect(() => {
@@ -82,6 +89,18 @@ export function Session({ learn = false }: { learn?: boolean }) {
     const topped = topUpLearn(steps, pending.current, idx);
     if (topped !== steps) setSteps(topped);
   }, [learn, steps, idx]);
+
+  // Practice mode: at the end of a round, go through its failed cards again (shuffled).
+  const roundStart = rounds[rounds.length - 1];
+  const atRoundEnd = !learn && !!steps && steps.length > 0 && idx >= steps.length;
+  const redoPending = atRoundEnd && redoRound(steps!, roundStart, history, dropped.current).length > 0;
+  useEffect(() => {
+    if (!atRoundEnd || !steps) return;
+    const redo = redoRound(steps, roundStart, history, dropped.current);
+    if (!redo.length) return;
+    setRounds((r) => [...r, steps.length]);
+    setSteps([...steps, ...redo]);
+  }, [atRoundEnd, steps, roundStart, history]);
 
   const step = steps?.[idx];
 
@@ -169,8 +188,9 @@ export function Session({ learn = false }: { learn?: boolean }) {
       prevCard: item.card,
     });
     let insertedRetryAt: number | null = null;
-    if (g === 1 && !step.retry) {
-      // see it again a few cards later in this session
+    if (g === 1 && learn) {
+      // Learn mode has no end of round: see it again a few cards later, until it's at least "So-so".
+      // (Practice mode repeats failed cards in a new round at the end, see redoRound.)
       insertedRetryAt = Math.min(idx + 5, steps!.length);
       const retry: Step = { ...step, retry: true };
       setSteps((old) => {
@@ -181,7 +201,7 @@ export function Session({ learn = false }: { learn?: boolean }) {
     }
     const snapshot: Snapshot = { results: info.results, answers: info.answers };
     setHistory((h) => [...h, { idx, itemId: item.id, prevCard: item.card, reviewId, insertedRetryAt, grade: g, snapshot }]);
-    setResults((r) => [...r, { grade: g, ms }]);
+    setResults((r) => [...r, { grade: g, ms, retry: !!step.retry }]);
     next();
   };
 
@@ -203,6 +223,11 @@ export function Session({ learn = false }: { learn?: boolean }) {
         return s;
       });
     }
+    if (last.idx < roundStart) {
+      // back into the previous round: its redo round is rebuilt when it ends again
+      setSteps((old) => (old ?? []).slice(0, roundStart));
+      setRounds((r) => r.slice(0, -1));
+    }
     setHistory((h) => h.slice(0, -1));
     setResults((r) => r.slice(0, -1));
     setRestored({ idx: last.idx, grade: last.grade, snapshot: last.snapshot });
@@ -211,7 +236,10 @@ export function Session({ learn = false }: { learn?: boolean }) {
   };
   const rest = restored && restored.idx === idx ? restored : null;
 
-  const skipWord = (wordId: string) => setSteps((old) => (old ?? []).filter((s, i) => i <= idx || s.wordId !== wordId));
+  const skipWord = (wordId: string) => {
+    dropped.current.add(wordId);
+    setSteps((old) => (old ?? []).filter((s, i) => i <= idx || s.wordId !== wordId));
+  };
 
   const menuAction = async (a: 'ban' | 'known' | 'edit' | 'skip') => {
     setMenu(false);
@@ -242,7 +270,7 @@ export function Session({ learn = false }: { learn?: boolean }) {
     showToast('Saved');
   };
 
-  if (!steps || !settings) return <div className="loading">Preparing your session…</div>;
+  if (!steps || !settings || redoPending) return <div className="loading">Preparing your session…</div>;
 
   const total = steps.length;
   const done = idx >= total;
@@ -250,8 +278,10 @@ export function Session({ learn = false }: { learn?: boolean }) {
   const learnedCount = steps.slice(0, idx).filter((x) => x.kind === 'intro').length;
 
   if (total === 0 || done) {
-    const n = results.length;
-    const correct = results.filter((r) => r.grade > 1).length;
+    // accuracy counts first answers only, not the repeats of failed cards
+    const first = results.filter((r) => !r.retry);
+    const n = first.length;
+    const correct = first.filter((r) => r.grade > 1).length;
     const mins = results.reduce((m, r) => m + r.ms, 0) / 60000;
     return (
       <div className="session">
@@ -325,10 +355,11 @@ export function Session({ learn = false }: { learn?: boolean }) {
         ) : (
           <>
             <div className="progress">
-              <div style={{ width: `${(100 * idx) / total}%` }} />
+              <div style={{ width: `${(100 * (idx - roundStart)) / (total - roundStart)}%` }} />
             </div>
             <span className="small muted">
-              {idx}/{total}
+              {roundStart > 0 && 'Redo '}
+              {idx - roundStart}/{total - roundStart}
             </span>
           </>
         )}

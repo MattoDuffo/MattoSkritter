@@ -135,7 +135,7 @@ export function ToneCard({
           </button>
         </div>
       )}
-      {finished && <GradeBar card={card} auto={auto} autoAdvance={settings.autoAdvance && !restored} onGrade={(g) => onDone(g, { mistakes: wrong, answers })} />}
+      {finished && <GradeBar card={card} shuffleDays={settings.shuffleDays} auto={auto} autoAdvance={settings.autoAdvance && !restored} onGrade={(g) => onDone(g, { mistakes: wrong, answers })} />}
     </>
   );
 }

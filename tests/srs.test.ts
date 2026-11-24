@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isStruggling, knownCard, newCard, newWordAllowance, review, struggleThreshold } from '../src/lib/srs';
+import { formatInterval, isStruggling, knownCard, newCard, newWordAllowance, previewIntervals, review, struggleThreshold } from '../src/lib/srs';
 
 describe('stubbornness', () => {
   it('thresholds match the plan', () => {
@@ -39,5 +39,24 @@ describe('scheduling', () => {
     const f = review(c, 1, c.due);
     expect(f.lapses).toBe(1);
     expect(f.due - c.due).toBeLessThan(86_400_000);
+  });
+});
+
+describe('grade button previews', () => {
+  it('show exactly the interval grading applies, even when graded later', () => {
+    const t0 = Date.UTC(2026, 10, 24, 12);
+    let c = newCard(t0);
+    let t = t0;
+    for (const g of [3, 3, 3, 2, 3, 4, 1, 3, 3] as const) {
+      const shown = previewIntervals(c, t, 1);
+      for (const gg of [2, 3, 4] as const) {
+        // graded 20 s after the buttons appeared
+        const at = t + 20_000;
+        expect(formatInterval(review(c, gg, at, 1).due - at)).toBe(shown[gg]);
+      }
+      expect(shown[1]).toBe('this session');
+      c = review(c, g, t, 1);
+      t = c.due;
+    }
   });
 });

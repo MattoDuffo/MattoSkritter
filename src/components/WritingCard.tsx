@@ -260,6 +260,7 @@ export function WritingCard({
           <GradeBar
             key={restoredView ? 'restored' : 'live'}
             card={card}
+            shuffleDays={settings.shuffleDays}
             auto={auto}
             autoAdvance={settings.autoAdvance && !restoredView}
             onGrade={(g) => onDone(g, { mistakes: total, results })}

@@ -76,17 +76,19 @@ export function Seg<T extends string>({ value, options, onChange }: { value: T; 
  */
 export function GradeBar({
   card,
+  shuffleDays,
   auto,
   autoAdvance,
   onGrade,
 }: {
   card?: StoredCard;
+  shuffleDays?: number;
   auto?: Grade4;
   autoAdvance?: boolean;
   onGrade: (g: Grade4) => void;
 }) {
   const [now] = useState(() => Date.now());
-  const intervals = card ? previewIntervals(card, now) : null;
+  const intervals = card ? previewIntervals(card, now, shuffleDays) : null;
   const done = useRef(false);
   const [chosen, setChosen] = useState<Grade4 | null>(null);
   const fire = (g: Grade4, byUser: boolean) => {

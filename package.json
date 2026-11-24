@@ -12,7 +12,8 @@
     "typecheck": "tsc -b",
     "e2e": "node e2e/smoke.mjs",
     "icons": "node scripts/make-icons.mjs",
-    "e2e:undo": "node e2e/undo.mjs"
+    "e2e:undo": "node e2e/undo.mjs",
+    "e2e:redo": "node e2e/redo.mjs"
   },
   "dependencies": {
     "dexie": "^4.4.7",

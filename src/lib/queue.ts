@@ -164,3 +164,27 @@ function shuffle<T>(a: T[]): T[] {
   }
   return r;
 }
+
+/**
+ * End of a practice round: the cards graded "Forgot" in it (their latest grade, so an undone and
+ * regraded card counts as regraded), shuffled, to go through again. Cards of `dropped` words
+ * (banned or marked known during the session) are left out. The first card isn't the one just
+ * answered when another can go first.
+ */
+export function redoRound(
+  steps: Step[],
+  roundStart: number,
+  graded: { idx: number; grade: number }[],
+  dropped: ReadonlySet<string> = new Set(),
+): Step[] {
+  const latest = new Map<number, number>();
+  for (const g of graded) if (g.idx >= roundStart && g.idx < steps.length) latest.set(g.idx, g.grade);
+  const failed = [...latest]
+    .filter(([i, g]) => g === 1 && steps[i].kind === 'review' && !dropped.has(steps[i].wordId))
+    .sort((a, b) => a[0] - b[0])
+    .map(([i]) => ({ ...(steps[i] as Extract<Step, { kind: 'review' }>), retry: true }));
+  const out = spreadByWord(shuffle(failed));
+  const last = steps[steps.length - 1];
+  if (out.length > 1 && last?.kind === 'review' && out[0].itemId === last.itemId) out.push(out.shift()!);
+  return out;
+}

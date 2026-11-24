@@ -1,10 +1,35 @@
-import { createEmptyCard, fsrs, generatorParameters, Rating, type Card, type Grade } from 'ts-fsrs';
+import { createEmptyCard, type AbstractScheduler, fsrs, generatorParameters, Rating, StrategyMode, type Card, type Grade } from 'ts-fsrs';
 import type { StoredCard } from './db';
 
 export type Grade4 = 1 | 2 | 3 | 4; // Forgot, So-so, Got it, Too easy
 export const GRADE_LABEL: Record<Grade4, string> = { 1: 'Forgot', 2: 'So-so', 3: 'Got it', 4: 'Too easy' };
 
 const scheduler = fsrs(generatorParameters({ enable_fuzz: true, request_retention: 0.9, maximum_interval: 3650 }));
+/**
+ * ts-fsrs seeds its interval fuzz with the exact review time by default, so the interval shown on
+ * a grade button (computed when the card appears) and the one applied (when the button is tapped,
+ * seconds later) were rolled separately and could differ by days. Seed from the card's state
+ * before the review instead: the same card always gets the same fuzz, whenever it is graded.
+ */
+scheduler.useStrategy(StrategyMode.SEED, function (this: AbstractScheduler) {
+  // `last` (the card before this review) is protected in the typings but set by the constructor
+  return cardSeed((this as unknown as { last: Card }).last);
+});
+
+function cardSeed(c: Pick<Card, 'due' | 'reps' | 'stability' | 'difficulty'> | StoredCard): string {
+  const due = typeof c.due === 'number' ? c.due : c.due.getTime();
+  return `${due}_${c.reps}_${c.difficulty * c.stability}`;
+}
+
+/** A number in [0, 1) fixed by a string (FNV-1a hash). */
+function hashUnit(str: string): number {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i);
+    h = Math.imul(h, 0x01000193);
+  }
+  return (h >>> 0) / 2 ** 32;
+}
 
 const DAY = 86_400_000;
 
@@ -41,14 +66,15 @@ const RATING: Record<Grade4, Grade> = { 1: Rating.Again, 2: Rating.Hard, 3: Rati
  * Schedule the next review. Intervals of a day or more get a random shift spanning up to
  * `shuffleDays` (setting, default 1 day), so the different parts of a word (and words learned
  * together) drift apart instead of always coming due at the same moment. The shift never moves a
- * card by more than half its interval.
+ * card by more than half its interval. The shift is fixed by the card and grade (not random at
+ * grading time), so the preview on the grade buttons is exactly what grading does.
  */
 export function review(
   card: StoredCard,
   grade: Grade4,
   now: number,
   shuffleDays = 1,
-  rand: () => number = Math.random,
+  rand: () => number = () => hashUnit(`${cardSeed(card)}_${grade}`),
 ): StoredCard {
   const next = fromCard(scheduler.next(toCard(card), new Date(now), RATING[grade]).card);
   const interval = next.due - now;
@@ -76,16 +102,14 @@ export function knownCard(now: number, dueInDays: number, stabilityDays = Math.m
   };
 }
 
-/** Next interval preview for each grade, e.g. { 1: '10m', 3: '3d' }. */
-export function previewIntervals(card: StoredCard, now: number): Record<Grade4, string> {
-  const p = scheduler.repeat(toCard(card), new Date(now));
-  const fmt = (d: Date) => formatInterval(d.getTime() - now);
-  return {
-    1: fmt(p[Rating.Again].card.due),
-    2: fmt(p[Rating.Hard].card.due),
-    3: fmt(p[Rating.Good].card.due),
-    4: fmt(p[Rating.Easy].card.due),
-  };
+/**
+ * Time until the card comes back for each grade, e.g. { 2: '1d', 3: '3d' }, computed with the
+ * same function grading uses. "Forgot" has none: the card is repeated in the session until it
+ * gets at least "So-so", and that grade sets the schedule.
+ */
+export function previewIntervals(card: StoredCard, now: number, shuffleDays = 1): Record<Grade4, string> {
+  const fmt = (g: Grade4) => formatInterval(review(card, g, now, shuffleDays).due - now);
+  return { 1: 'this session', 2: fmt(2), 3: fmt(3), 4: fmt(4) };
 }
 
 export function formatInterval(ms: number): string {
