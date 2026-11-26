@@ -1,10 +1,35 @@
 let voice: SpeechSynthesisVoice | null | undefined;
 
+type VoiceInfo = Pick<SpeechSynthesisVoice, 'name' | 'lang' | 'voiceURI' | 'localService'>;
+
+function isMandarin(v: VoiceInfo) {
+  return /^zh([-_](CN|Hans)|$)/i.test(v.lang) || /^cmn/i.test(v.lang);
+}
+
+/**
+ * Rank a Mandarin voice: higher is better. iOS marks downloaded high-quality voices as
+ * "Premium" / "Enhanced" in the name or voiceURI (e.g. com.apple.voice.premium.zh-CN.Han).
+ */
+export function voiceScore(v: VoiceInfo): number {
+  const id = `${v.name} ${v.voiceURI}`.toLowerCase();
+  let score = 0;
+  if (/premium/.test(id)) score += 100;
+  else if (/enhanced/.test(id)) score += 50;
+  if (/\bhan\b/.test(id)) score += 20;
+  else if (/tingting|ting-ting|xiaoxiao|yu-shu|lili/.test(id)) score += 10;
+  if (/compact|eloquence/.test(id)) score -= 5;
+  return score;
+}
+
+export function chooseVoice<T extends VoiceInfo>(voices: T[]): T | null {
+  const zh = voices.filter(isMandarin);
+  if (zh.length) return zh.reduce((best, v) => (voiceScore(v) > voiceScore(best) ? v : best));
+  return voices.find((v) => v.lang.toLowerCase().startsWith('zh')) ?? null;
+}
+
 function pickVoice(): SpeechSynthesisVoice | null {
   if (typeof speechSynthesis === 'undefined') return null;
-  const voices = speechSynthesis.getVoices();
-  const zh = voices.filter((v) => /^zh[-_](CN|Hans)/i.test(v.lang) || v.lang === 'zh');
-  return zh.find((v) => /tingting|ting-ting|xiaoxiao|yu-shu|lili/i.test(v.name)) ?? zh[0] ?? voices.find((v) => v.lang.startsWith('zh')) ?? null;
+  return chooseVoice(speechSynthesis.getVoices());
 }
 
 if (typeof speechSynthesis !== 'undefined') {
@@ -62,7 +87,8 @@ export function speechText(text: string, pinyin?: string): string {
 /** Speak Mandarin text with the device's text-to-speech voice. Pass the pinyin for correct readings. */
 export function speak(text: string, pinyin?: string) {
   if (!canSpeak()) return;
-  if (voice === undefined) voice = pickVoice();
+  // Re-pick until a voice turns up: iOS can return an empty list before the voices load.
+  if (!voice) voice = pickVoice();
   speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(speechText(text, pinyin));
   u.lang = 'zh-CN';
